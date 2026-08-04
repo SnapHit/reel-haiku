@@ -605,11 +605,17 @@ addEventListener('beforeprint', () => { if(over) printFit(); });
 let rt;
 addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(fit, 120); });
 
-/* Content is fetched rather than inlined, so the file stays editable at 534
-   puzzles and the same shape works for the real site. */
+/* Content is fetched rather than inlined, so the file stays editable and the
+   same shape works for the real site.
+
+   no-cache does not mean no caching. It means the browser must ask the server
+   whether its copy is still good, and Pages answers an unchanged file with a
+   304 and no body. A version in the query string only worked when somebody
+   remembered to bump it, and content has already shipped stale because nobody
+   did. This asks every time and costs nothing when the answer is no change. */
 Promise.all([
-  fetch('puzzles.json?v=2').then(r => r.json()),
-  fetch('titles.json?v=2').then(r => r.json())
+  fetch('puzzles.json', {cache: 'no-cache'}).then(r => r.json()),
+  fetch('titles.json', {cache: 'no-cache'}).then(r => r.json())
 ]).then(([p, t]) => {
   PUZZLES = p.puzzles.filter(z => z.y >= FROM);
   FILMS = t;
