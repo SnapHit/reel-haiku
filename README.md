@@ -17,7 +17,7 @@ What the demo already settles:
 - Autocomplete guessing against a searchable pool much larger than the answer pool
 - The result state and the reveal
 
-Content loads from `puzzles.json` and `titles.json`. The searchable pool is 16,034 titles against 197 answers, so the autocomplete cannot leak an answer by omission.
+Content loads from `puzzles.json` and `titles.json`. The searchable pool is 16,034 titles against 197 answers, so the autocomplete cannot leak an answer by omission. Titles and years are separate fields, so the three films called Titanic are distinguishable. The pool is ordered by global notability, so a partial query surfaces the best known match first.
 
 What it does not yet do: daily rollover, streaks, or the archive. Puzzles are served at random rather than one per day, deliberately, so the format can be played at volume during calibration.
 
@@ -41,6 +41,6 @@ This repository is the public prototype and will become the site. The generation
 
 ## Ownership
 
-Joint project, Nathan Haslewood and Mike, 50/50. A sibling game covering written works will follow on novlr.com, sharing the same engine and a different corpus.
+Created by **Mike Lindsey** and **Nathan Haslewood**. Joint project, 50/50. A sibling game covering written works will follow on novlr.com, sharing the same engine and a different corpus.
 
 Copyright 2026. All rights reserved. This repository is public for collaboration and preview; it is not open source and carries no licence.

@@ -127,11 +127,21 @@ input::placeholder{color:rgba(255,255,255,.62);}
 }
 .ac.on{display:block;}
 .ac div{
-  padding:10px 13px;font-size:14px;font-weight:500;cursor:pointer;
-  border-bottom:1px solid rgba(0,0,0,.12);
+  display:flex;align-items:baseline;gap:10px;
+  padding:12px 14px;cursor:pointer;
+  border-bottom:1px solid rgba(0,0,0,.09);
 }
 .ac div:last-child{border-bottom:0;}
 .ac div:hover,.ac div.sel{background:var(--ink,#E6140F);color:#fff;}
+.ac .t{
+  flex:1;font-size:15px;font-weight:600;letter-spacing:-.005em;
+  line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.ac .y{
+  font:400 12px ui-monospace,'SF Mono',Menlo,monospace;
+  opacity:.5;flex:0 0 auto;letter-spacing:.02em;
+}
+.ac div:hover .y,.ac div.sel .y{opacity:.75;}
 
 
 .rule{height:1.5px;background:currentColor;margin:max(12px,2vh) 0 7px;flex:0 0 auto;}
@@ -150,6 +160,11 @@ input::placeholder{color:rgba(255,255,255,.62);}
 .foot .right{text-align:right;}
 .foot .prog{letter-spacing:.3em;margin-bottom:.2em;}
 .foot .ans{opacity:0;transition:opacity .45s ease .1s;height:3.2em;overflow:hidden;}
+.credit{
+  flex:0 0 auto;margin-top:6px;
+  font-size:clamp(7.5px,1.95vw,9.5px);font-weight:400;
+  letter-spacing:.06em;opacity:.5;
+}
 .foot .ans.show{opacity:1;}
 </style>
 </head>
@@ -198,6 +213,8 @@ input::placeholder{color:rgba(255,255,255,.62);}
       <div class="ans" id="ans"></div>
     </div>
   </div>
+
+  <div class="credit">Created by Mike Lindsey and Nathan Haslewood</div>
 
 </div>
 
@@ -279,11 +296,12 @@ function advance(label){
   input.value=''; acEl.classList.remove('on'); sel=-1;
 }
 
-function submit(t){
-  if(over || !t) return;
+function submit(f){
+  if(over || !f) return;
   guesses++;
-  if(t === P().t){ finish(true); return; }
-  advance(`Not ${t}. `);
+  const z = P();
+  if(f[0] === z.t && f[1] === z.y){ finish(true); return; }
+  advance(`Not ${f[0]}. `);
 }
 
 function skip(){ if(over) return; guesses++; advance(''); }
@@ -301,13 +319,25 @@ function reset(){
   say('Line one of three');
 }
 
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
 input.addEventListener('input', () => {
   const q = input.value.trim().toLowerCase();
   sel = -1;
   if(q.length < 2){ acEl.classList.remove('on'); return; }
-  matches = FILMS.filter(f => f.toLowerCase().includes(q)).slice(0,7);
+  /* Rank titles that start with the query above ones that merely contain it. */
+  const starts = [], has = [];
+  for(const f of FILMS){
+    const l = f[0].toLowerCase();
+    if(l.startsWith(q)) starts.push(f);
+    else if(l.includes(q)) has.push(f);
+    if(starts.length >= 8) break;
+  }
+  matches = starts.concat(has).slice(0,8);
   if(!matches.length){ acEl.classList.remove('on'); return; }
-  acEl.innerHTML = matches.map((f,i) => `<div data-i="${i}">${f}</div>`).join('');
+  acEl.innerHTML = matches.map((f,i) =>
+    `<div data-i="${i}"><span class="t">${esc(f[0])}</span>` +
+    `<span class="y">${f[1] || ''}</span></div>`).join('');
   acEl.classList.add('on');
 });
 
@@ -336,8 +366,8 @@ addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(fit, 120); 
 /* Content is fetched rather than inlined, so the file stays editable at 534
    puzzles and the same shape works for the real site. */
 Promise.all([
-  fetch('puzzles.json').then(r => r.json()),
-  fetch('titles.json').then(r => r.json())
+  fetch('puzzles.json?v=2').then(r => r.json()),
+  fetch('titles.json?v=2').then(r => r.json())
 ]).then(([p, t]) => {
   PUZZLES = p.puzzles;
   FILMS = t;
