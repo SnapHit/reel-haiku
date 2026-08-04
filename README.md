@@ -41,6 +41,6 @@ This repository is the public prototype and will become the site. The generation
 
 ## Ownership
 
-Created by **Mike Lindsey** and **Nathan Haslewood**. Joint project, 50/50. A sibling game covering written works will follow on novlr.com, sharing the same engine and a different corpus.
+Created by **Mike Linsey** and **Nathan Haslewood**. Joint project, 50/50. A sibling game covering written works will follow on novlr.com, sharing the same engine and a different corpus.
 
 Copyright 2026. All rights reserved. This repository is public for collaboration and preview; it is not open source and carries no licence.
