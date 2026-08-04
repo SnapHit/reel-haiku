@@ -187,20 +187,25 @@ input::placeholder{color:rgba(255,255,255,.62);}
 }
 .foot .right{text-align:right;}
 .foot .prog{letter-spacing:.3em;margin-bottom:.2em;}
-.foot .ans{opacity:0;transition:opacity .45s ease .1s;height:3.2em;overflow:hidden;}
+/* The signature belongs to the poster, not to the game: on screen the reveal
+   already names the film in full, so the foot stays blank and only clean view
+   and print turn it on. The height is still reserved because the foot is the
+   taller of its two columns, and collapsing it would move the rule, the mark
+   and the input by 14px. */
+.foot .ans{opacity:0;height:3.2em;overflow:hidden;}
 .credit{
   flex:0 0 auto;margin-top:6px;
   font-size:clamp(7.5px,1.95vw,9.5px);font-weight:400;
   letter-spacing:.06em;opacity:.5;
 }
-.foot .ans.show{opacity:1;}
 .back{display:none;white-space:nowrap;font-weight:500;letter-spacing:.1em;text-transform:uppercase;}
 
-/* Clean view: the interface goes and the poem takes the room it leaves.
-   This is the same composition the print block renders, over the same
-   elements, so the two differ only in the box they are given to fill. */
-body.bare .space{display:none;}
-body.bare .lines{flex:1 1 auto;}
+/* Clean view: the interface goes and the room it was using stays empty. The
+   poem keeps its 49%, which is the share the sheet gives it too, so this is
+   the printed poster on a screen rather than a bigger version of the poem.
+   The same rules as the print block, over the same elements, and only the box
+   they are given to fill is different. */
+body.bare .space>*{display:none;}
 body.bare .foot .prog{display:none;}
 body.bare .foot .ans{opacity:1;height:auto;overflow:visible;}
 body.bare .credit{display:flex;justify-content:space-between;gap:12px;}
@@ -392,8 +397,8 @@ function finish(won){
   over = true;
   const z = P();
   shown = 3; paint();
+  /* Written for the poster surfaces to pick up. On screen it stays hidden. */
   ansEl.innerHTML = z.t + '<br>' + z.y;
-  ansEl.classList.add('show');
   input.style.display = 'none';
   resultEl.classList.add('on');
   acEl.classList.remove('on');
@@ -437,7 +442,7 @@ function reset(){
   nextBtn.classList.remove('hero');
   nextrowEl.classList.remove('over');
   document.body.classList.remove('done');
-  ansEl.classList.remove('show'); ansEl.innerHTML='';
+  ansEl.innerHTML='';
   acEl.classList.remove('on');
   paint();
   say('Line one of three');
@@ -519,8 +524,9 @@ eraEl.addEventListener('click', e => {
 });
 
 /* Clean view. Nothing is added to the page and nothing is moved: one class on
-   the body takes the interface away and hands the poem the room, and the fit
-   runs again because the box it measures against has just grown. */
+   the body takes the interface away and leaves its room empty. The poem box is
+   the same 49% either way, so the fit lands on the size it already had. The
+   call stays so that remains true if the composition ever changes. */
 let bare = false;
 function clean(on){
   bare = on;
@@ -601,11 +607,17 @@ addEventListener('beforeprint', () => { if(over) printFit(); });
 let rt;
 addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(fit, 120); });
 
-/* Content is fetched rather than inlined, so the file stays editable at 534
-   puzzles and the same shape works for the real site. */
+/* Content is fetched rather than inlined, so the file stays editable and the
+   same shape works for the real site.
+
+   no-cache does not mean no caching. It means the browser must ask the server
+   whether its copy is still good, and Pages answers an unchanged file with a
+   304 and no body. A version in the query string only worked when somebody
+   remembered to bump it, and content has already shipped stale because nobody
+   did. This asks every time and costs nothing when the answer is no change. */
 Promise.all([
-  fetch('puzzles.json?v=2').then(r => r.json()),
-  fetch('titles.json?v=2').then(r => r.json())
+  fetch('puzzles.json', {cache: 'no-cache'}).then(r => r.json()),
+  fetch('titles.json', {cache: 'no-cache'}).then(r => r.json())
 ]).then(([p, t]) => {
   PUZZLES = p.puzzles.filter(z => z.y >= FROM);
   FILMS = t;
