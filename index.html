@@ -202,46 +202,11 @@ input::placeholder{color:rgba(255,255,255,.62);}
 </div>
 
 <script>
-/* Ten puzzles. Line one is always the weakest clue, line three the strongest.
-   None names the film, a character, or the director.
-   Colours are assigned deliberately AGAINST the film so the palette never
-   leaks the answer: no green for Jurassic Park, no gold for The Lion King. */
-const PUZZLES = [
-  { lines:["Old blood, kept in stone","Someone builds a park from it","Tickets go on sale"],
-    title:"Jurassic Park", year:1993, ink:"#0E2A33" },
-  { lines:["A gorge, and a lie","The father does not climb out","The son is told: run"],
-    title:"The Lion King", year:1994, ink:"#C43C00" },
-  { lines:["Some grief goes unnamed","He helps a boy who sees ghosts","He has been one too"],
-    title:"The Sixth Sense", year:1999, ink:"#2A2E1C" },
-  { lines:["A town needs summer","Something in the water feeds","The mayor says: swim"],
-    title:"Jaws", year:1975, ink:"#12256B" },
-  { lines:["The wind takes her house","She lands somewhere in colour","She only wants home"],
-    title:"The Wizard of Oz", year:1939, ink:"#4A1D96" },
-  { lines:["She stops for the night","The young man seems kind enough","His mother is dead"],
-    title:"Psycho", year:1960, ink:"#141414" },
-  { lines:["A boy meets his mum","She is seventeen, and keen","He must fix this fast"],
-    title:"Back to the Future", year:1985, ink:"#00646E" },
-  { lines:["Comfort or the truth","Most would take the pleasant lie","The offer is real"],
-    title:"The Matrix", year:1999, ink:"#7A1220" },
-  { lines:["A card game wins him","Passage on the greatest ship","Upstairs, she is bored"],
-    title:"Titanic", year:1997, ink:"#1436CE" },
-  { lines:["The old man says no","Gunmen find him buying fruit","The war starts that day"],
-    title:"The Godfather", year:1972, ink:"#5C1A0E" },
-  { lines:["Beauty as a threat","A woman fears a mirror","More than she fears death"],
-    title:"Snow White and the Seven Dwarfs", year:1937, ink:"#C4006A" },
-  { lines:["Being replaced hurts","Even a plastic cowboy","Fears the newer thing"],
-    title:"Toy Story", year:1995, ink:"#1D5C2E" },
-  { lines:["A deal with a lord","Fetch the princess, get the deed","A donkey comes too"],
-    title:"Shrek", year:2001, ink:"#076B3C" },
-  { lines:["He runs a nightclub","Neutral, he says, about all","Then she walks back in"],
-    title:"Casablanca", year:1942, ink:"#3A2A5E" },
-  { lines:["Who owns a forest","The ones who live in its trees","Or the ones with guns"],
-    title:"Avatar", year:2009, ink:"#0F4C4C" }
-];
 
-const FILMS = ["Alien","Aliens","Amadeus","American Beauty","Amelie","Apocalypse Now","Arrival","Back to the Future","Batman","Beetlejuice","Blade Runner","Braveheart","Bridesmaids","Casablanca","Cast Away","Chinatown","Citizen Kane","Clueless","Coco","Die Hard","Dirty Dancing","Django Unchained","Dr. Strangelove","Dune","E.T. the Extra-Terrestrial","Edward Scissorhands","Fargo","Ferris Bueller's Day Off","Fight Club","Forrest Gump","Frozen","Get Out","Ghostbusters","Gladiator","Gone with the Wind","Goodfellas","Grease","Groundhog Day","Heat","Home Alone","Inception","Independence Day","Indiana Jones and the Last Crusade","Inside Out","Interstellar","It's a Wonderful Life","Jaws","Jurassic Park","Kill Bill","King Kong","La La Land","Labyrinth","Lawrence of Arabia","Life of Pi","Mad Max: Fury Road","Memento","Men in Black","Moulin Rouge!","Mrs. Doubtfire","No Country for Old Men","Oppenheimer","Parasite","Pretty Woman","Psycho","Pulp Fiction","Raiders of the Lost Ark","Rain Man","Ratatouille","Rear Window","Reservoir Dogs","Rocky","Roman Holiday","Schindler's List","Scream","Se7en","Shrek","Sideways","Signs","Singin' in the Rain","Slumdog Millionaire","Snatch","Some Like It Hot","Spirited Away","Stand by Me","Star Wars: A New Hope","Superbad","Taxi Driver","Terminator 2: Judgment Day","The Big Lebowski","The Blair Witch Project","The Breakfast Club","The Dark Knight","The Departed","The Exorcist","The Godfather","The Goonies","The Grand Budapest Hotel","The Green Mile","The Hangover","The Incredibles","The Iron Giant","The Italian Job","The Lion King","The Lord of the Rings: The Fellowship of the Ring","The Matrix","The Notebook","The Princess Bride","The Prestige","The Revenant","The Shawshank Redemption","The Shining","The Sixth Sense","The Silence of the Lambs","The Social Network","The Sound of Music","The Terminator","The Thing","The Truman Show","The Usual Suspects","The Wizard of Oz","Thelma & Louise","Titanic","Top Gun","Toy Story","Trainspotting","Twelve Angry Men","Up","V for Vendetta","Vertigo","WALL-E","Wayne's World","Whiplash","Willy Wonka & the Chocolate Factory","Zodiac","Zombieland","Avatar","The Godfather","Snow White and the Seven Dwarfs","Shrek","The Lion King","Toy Story","The Wizard of Oz","Jaws","Psycho","Titanic","The Matrix","Back to the Future","The Sixth Sense","Jurassic Park","Casablanca"];
-
-let order = [...PUZZLES.keys()], oi = 0;
+/* Content is fetched at boot, not inlined. */
+let PUZZLES = [];
+let FILMS = [];
+let order = [], oi = 0;
 let shown = 1, guesses = 0, over = false, sel = -1, matches = [];
 
 const $ = id => document.getElementById(id);
@@ -252,8 +217,6 @@ const linesBox=$('lines'), inner=$('inner'), progEl=$('prog'), ansEl=$('ans'),
       skipBtn=$('skip'), nextBtn=$('next'), hintEl=$('hint');
 
 const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];} return a; };
-shuffle(order);
-
 const P = () => PUZZLES[order[oi]];
 const WORD = ['one','two','three'];
 
@@ -274,10 +237,11 @@ function fit(){
 
 function paint(){
   const z = P();
-  document.body.style.background = z.ink;
-  document.documentElement.style.setProperty('--ink', z.ink);
+  if(!z) return;
+  document.body.style.background = z.k;
+  document.documentElement.style.setProperty('--ink', z.k);
   lineEls.forEach((el,i) => {
-    el.innerHTML = '<span class="em"></span>' + z.lines[i];
+    el.innerHTML = '<span class="em"></span>' + z.l[i];
     el.classList.toggle('on', i < shown);
   });
   progEl.textContent = [0,1,2].map(i => i < shown ? '\u25A0' : '\u25A1').join('');
@@ -291,7 +255,7 @@ function finish(won){
   over = true;
   const z = P();
   shown = 3; paint();
-  ansEl.innerHTML = z.title + '<br>' + z.year;
+  ansEl.innerHTML = z.t + '<br>' + z.y;
   ansEl.classList.add('show');
   input.style.display = 'none';
   resultEl.classList.add('on');
@@ -302,9 +266,9 @@ function finish(won){
 
   const marks = ['\u25A1','\u25A1','\u25A1'];
   if(won) marks[Math.min(guesses,3)-1] = '\u25A0';
-  rtitleEl.textContent = z.title;
+  rtitleEl.textContent = z.t;
   marksEl.textContent = won ? marks.join('') : '\u2715\u2715\u2715';
-  rtxtEl.textContent = z.year + (won ? '  /  Solved on line ' + WORD[guesses-1] : '  /  Beat me today');
+  rtxtEl.textContent = z.y + (won ? '  /  Solved on line ' + WORD[guesses-1] : '  /  Beat me today');
   say(won ? 'Solved' : 'Missed');
 }
 
@@ -318,7 +282,7 @@ function advance(label){
 function submit(t){
   if(over || !t) return;
   guesses++;
-  if(t === P().title){ finish(true); return; }
+  if(t === P().t){ finish(true); return; }
   advance(`Not ${t}. `);
 }
 
@@ -369,7 +333,23 @@ nextBtn.addEventListener('click', reset);
 let rt;
 addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(fit, 120); });
 
-paint();
+/* Content is fetched rather than inlined, so the file stays editable at 534
+   puzzles and the same shape works for the real site. */
+Promise.all([
+  fetch('puzzles.json').then(r => r.json()),
+  fetch('titles.json').then(r => r.json())
+]).then(([p, t]) => {
+  PUZZLES = p.puzzles;
+  FILMS = t;
+  order = [...PUZZLES.keys()];
+  shuffle(order);
+  oi = 0;
+  paint();
+  say('Line one of three');
+}).catch(() => {
+  say('Could not load puzzles');
+});
+
 /* Refit once the real face loads, or the size is measured against a fallback
    with completely different metrics. */
 if(document.fonts && document.fonts.ready) document.fonts.ready.then(fit);

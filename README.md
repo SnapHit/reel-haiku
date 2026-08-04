@@ -8,7 +8,7 @@ No signup, no ads, no accounts. Under five minutes.
 
 ## Status
 
-**Working prototype.** Fifteen sample puzzles, hand written. Everything here is subject to change while the format is being calibrated.
+**Working prototype.** 534 puzzles across 197 films, served at random. Everything here is subject to change while the format is being calibrated.
 
 What the demo already settles:
 
@@ -17,7 +17,9 @@ What the demo already settles:
 - Autocomplete guessing against a searchable pool much larger than the answer pool
 - The result state and the reveal
 
-What it does not yet do: daily rollover, streaks, the archive, or the real content set.
+Content loads from `puzzles.json` and `titles.json`. The searchable pool is 16,034 titles against 197 answers, so the autocomplete cannot leak an answer by omission.
+
+What it does not yet do: daily rollover, streaks, or the archive. Puzzles are served at random rather than one per day, deliberately, so the format can be played at volume during calibration.
 
 ## How it plays
 
