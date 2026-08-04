@@ -8,7 +8,7 @@ No signup, no ads, no accounts. Under five minutes.
 
 ## Status
 
-**Working prototype.** 534 puzzles across 197 films, served at random. Everything here is subject to change while the format is being calibrated.
+**Working prototype.** 600 puzzles across 200 films, served at random. Everything here is subject to change while the format is being calibrated.
 
 What the demo already settles:
 
@@ -17,7 +17,7 @@ What the demo already settles:
 - Autocomplete guessing against a searchable pool much larger than the answer pool
 - The result state and the reveal
 
-Content loads from `puzzles.json` and `titles.json`. The searchable pool is 16,034 titles against 197 answers, so the autocomplete cannot leak an answer by omission. Titles and years are separate fields, so the three films called Titanic are distinguishable. The pool is ordered by global notability, so a partial query surfaces the best known match first.
+Content loads from `puzzles.json` and `titles.json`. The searchable pool is 16,034 titles against 200 answers, so the autocomplete cannot leak an answer by omission. Titles and years are separate fields, so the three films called Titanic are distinguishable. The pool is ordered by global notability, so a partial query surfaces the best known match first.
 
 What it does not yet do: daily rollover, streaks, or the archive. Puzzles are served at random rather than one per day, deliberately, so the format can be played at volume during calibration.
 
