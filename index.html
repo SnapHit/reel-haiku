@@ -74,6 +74,18 @@ body{
 .ghost.sub:hover{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.6);}
 .ghost.sub.hero{background:#fff;color:var(--ink,#E6140F);border-color:#fff;font-weight:600;}
 
+/* The poster action takes the row the give up button vacates once the puzzle
+   is over, so nothing that was already on screen moves to make room for it. */
+.posterrow{display:none;gap:8px;}
+.nextrow.over .posterrow{display:flex;}
+.nextrow.over #skip{display:none;}
+.posterrow .ghost{min-width:0;}
+.ghost.sz{
+  padding:13px 15px;font-weight:500;
+  background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.3);
+}
+.ghost.sz.on{background:rgba(255,255,255,.34);border-color:#fff;font-weight:600;}
+
 .status{
   font-size:clamp(8.5px,2.2vw,10.5px);
   font-weight:500;letter-spacing:.09em;text-transform:uppercase;
@@ -166,7 +178,53 @@ input::placeholder{color:rgba(255,255,255,.62);}
   letter-spacing:.06em;opacity:.5;
 }
 .foot .ans.show{opacity:1;}
+
+/* Print geometry, held as fractions of the sheet. The type fit reads these
+   too, so the measurement and the print rules cannot drift apart. */
+:root{--p-pad-t:6.4%;--p-pad-x:7%;--p-pad-b:5.4%;--p-poem:49%;}
+
+/* Paper. The same poster, measured against the page box rather than the
+   viewport, which has no meaning here. Everything is scoped to body.done, so
+   these rules are unreachable until the puzzle is over and the poem is whole.
+   Sizes are proportional: A4 and A3 differ only by the sheet they are given. */
+@media print{
+  html{height:100%;}
+
+  body.done{
+    height:100%;overflow:hidden;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  /* Nothing may still be easing when the page is captured, or the poster
+     prints a half faded answer. */
+  body.done,body.done *{
+    transition:none;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+
+  body.done .poster{
+    height:100%;width:100%;max-width:none;margin:0;
+    padding:var(--p-pad-t) var(--p-pad-x) var(--p-pad-b);
+    background-color:inherit;
+    font-size:var(--p-base,13px);
+  }
+
+  body.done .lines{flex:0 0 var(--p-poem);}
+  /* Beats the inline size the screen fit leaves on the element. */
+  body.done .inner{font-size:var(--p-fit,72px)!important;}
+  body.done .line{opacity:1;transform:none;}
+
+  /* Everything the player used to get here: buttons, status, hint, input,
+     autocomplete and the reveal block. A poster keeps none of it. */
+  body.done .space>*{display:none;}
+
+  body.done .rule{height:.14em;margin:1.6em 0 .8em;}
+  body.done .foot{font-size:1em;}
+  body.done .foot .prog{display:none;}
+  body.done .foot .ans{opacity:1;height:auto;overflow:visible;}
+  body.done .credit{font-size:.82em;margin-top:.8em;}
+}
 </style>
+<style id="pagesize">@page{size:A4;margin:0}</style>
 </head>
 <body>
 
@@ -181,7 +239,12 @@ input::placeholder{color:rgba(255,255,255,.62);}
   </div>
 
   <div class="space">
-    <div class="nextrow">
+    <div class="nextrow" id="nextrow">
+      <div class="posterrow" id="posterrow">
+        <button class="ghost sz on" id="a4" data-sz="A4">A4</button>
+        <button class="ghost sz" id="a3" data-sz="A3">A3</button>
+        <button class="ghost sub" id="poster">Save as poster</button>
+      </div>
       <button class="ghost" id="skip">Next line</button>
       <button class="ghost sub" id="next">New puzzle</button>
     </div>
@@ -231,7 +294,8 @@ const lineEls=[$('l0'),$('l1'),$('l2')];
 const linesBox=$('lines'), inner=$('inner'), progEl=$('prog'), ansEl=$('ans'),
       statusEl=$('status'), input=$('guess'), acEl=$('ac'),
       resultEl=$('result'), marksEl=$('marks'), rtxtEl=$('rtxt'), rtitleEl=$('rtitle'),
-      skipBtn=$('skip'), nextBtn=$('next'), hintEl=$('hint');
+      skipBtn=$('skip'), nextBtn=$('next'), hintEl=$('hint'),
+      nextrowEl=$('nextrow'), posterBtn=$('poster'), pageEl=$('pagesize');
 
 const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];} return a; };
 const P = () => PUZZLES[order[oi]];
@@ -280,6 +344,8 @@ function finish(won){
   skipBtn.classList.add('gone');
   hintEl.classList.add('gone');
   nextBtn.classList.add('hero');
+  nextrowEl.classList.add('over');
+  document.body.classList.add('done');
 
   const marks = ['\u25A1','\u25A1','\u25A1'];
   if(won) marks[Math.min(guesses,3)-1] = '\u25A0';
@@ -313,6 +379,8 @@ function reset(){
   resultEl.classList.remove('on');
   skipBtn.classList.remove('gone'); hintEl.classList.remove('gone');
   nextBtn.classList.remove('hero');
+  nextrowEl.classList.remove('over');
+  document.body.classList.remove('done');
   ansEl.classList.remove('show'); ansEl.innerHTML='';
   acEl.classList.remove('on');
   paint();
@@ -359,6 +427,67 @@ input.addEventListener('keydown', e => {
 
 skipBtn.addEventListener('click', skip);
 nextBtn.addEventListener('click', reset);
+
+/* The poster. Print only, no library and no server: the browser turns the
+   finished puzzle into a PDF using the rules in the print block above. */
+const MM = 96 / 25.4;                 /* CSS pixels per millimetre at 96dpi */
+const SHEET = { A4:[210,297], A3:[297,420] };
+let sheet = 'A4';
+
+/* The screen fit measures the poem against the on-screen box, which says
+   nothing about a sheet of paper. Measure it again in an off-screen box the
+   exact size of the poem area on the chosen sheet, so a long haiku sets
+   smaller on paper for the same reason it does on screen. The real element is
+   never touched, so the screen cannot move. */
+function printFit(){
+  const cs = getComputedStyle(document.documentElement);
+  const pc = n => parseFloat(cs.getPropertyValue(n)) / 100;
+  const pw = SHEET[sheet][0] * MM, ph = SHEET[sheet][1] * MM;
+  const w = pw * (1 - 2 * pc('--p-pad-x'));
+  const h = (ph - pw * (pc('--p-pad-t') + pc('--p-pad-b'))) * pc('--p-poem');
+
+  /* The probe carries the lines but not the inner class, or the print rule
+     that sizes the poem would size the probe measuring it as well. */
+  const box = document.createElement('div');
+  box.style.cssText = 'position:fixed;left:-9999px;top:0;visibility:hidden;' +
+    'overflow:hidden;width:' + w + 'px;height:' + h + 'px;';
+  box.innerHTML = '<div>' + inner.innerHTML + '</div>';
+  document.body.appendChild(box);
+  const probe = box.firstChild;
+  let lo = 14, hi = 900;
+  for(let i=0;i<22;i++){
+    const mid = (lo + hi) / 2;
+    probe.style.fontSize = mid + 'px';
+    if(probe.scrollHeight <= h && probe.scrollWidth <= w + 1) lo = mid; else hi = mid;
+  }
+  box.remove();
+
+  const r = document.documentElement.style;
+  r.setProperty('--p-fit', lo + 'px');
+  r.setProperty('--p-base', pw * 0.017 + 'px');
+}
+
+/* The sheet and the page rule are set together, so a print raised from the
+   browser can never fit one size and print on the other. */
+function setSheet(s){
+  sheet = s;
+  pageEl.textContent = '@page{size:' + s + ';margin:0}';
+  $('a4').classList.toggle('on', s === 'A4');
+  $('a3').classList.toggle('on', s === 'A3');
+}
+
+[$('a4'), $('a3')].forEach(b => b.addEventListener('click', () => setSheet(b.dataset.sz)));
+
+posterBtn.addEventListener('click', async () => {
+  /* Without the real face the poem is fitted to fallback metrics, and the PDF
+     comes out in the wrong type at the wrong size. */
+  if(document.fonts && document.fonts.ready) await document.fonts.ready;
+  printFit();
+  print();
+});
+
+/* Also covers a print raised from the browser itself rather than the button. */
+addEventListener('beforeprint', () => { if(over) printFit(); });
 
 let rt;
 addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(fit, 120); });
