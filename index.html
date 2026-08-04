@@ -200,11 +200,12 @@ input::placeholder{color:rgba(255,255,255,.62);}
 }
 .back{display:none;white-space:nowrap;font-weight:500;letter-spacing:.1em;text-transform:uppercase;}
 
-/* Clean view: the interface goes and the poem takes the room it leaves.
-   This is the same composition the print block renders, over the same
-   elements, so the two differ only in the box they are given to fill. */
-body.bare .space{display:none;}
-body.bare .lines{flex:1 1 auto;}
+/* Clean view: the interface goes and the room it was using stays empty. The
+   poem keeps its 49%, which is the share the sheet gives it too, so this is
+   the printed poster on a screen rather than a bigger version of the poem.
+   The same rules as the print block, over the same elements, and only the box
+   they are given to fill is different. */
+body.bare .space>*{display:none;}
 body.bare .foot .prog{display:none;}
 body.bare .foot .ans{opacity:1;height:auto;overflow:visible;}
 body.bare .credit{display:flex;justify-content:space-between;gap:12px;}
@@ -523,8 +524,9 @@ eraEl.addEventListener('click', e => {
 });
 
 /* Clean view. Nothing is added to the page and nothing is moved: one class on
-   the body takes the interface away and hands the poem the room, and the fit
-   runs again because the box it measures against has just grown. */
+   the body takes the interface away and leaves its room empty. The poem box is
+   the same 49% either way, so the fit lands on the size it already had. The
+   call stays so that remains true if the composition ever changes. */
 let bare = false;
 function clean(on){
   bare = on;
