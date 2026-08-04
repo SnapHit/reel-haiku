@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reel Haiku</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+
+body{
+  font-family:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:#E6140F;
+  color:#fff;
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+  transition:background-color .65s ease;
+}
+
+.poster{
+  height:100vh;height:100dvh;
+  display:flex;flex-direction:column;
+  padding:max(18px,3vh) max(18px,4.5vw) max(14px,2.2vh);
+  max-width:900px;margin:0 auto;
+}
+
+/* The haiku owns the top half. Everything else is deliberately small. */
+.lines{flex:0 0 49%;min-height:0;overflow:hidden;}
+.inner{display:block;}
+
+.line{
+  font-family:'Anton',Impact,'Arial Narrow',sans-serif;
+  text-transform:uppercase;
+  line-height:.90;
+  margin-bottom:.06em;
+  display:block;
+  opacity:0;
+  transform:translateY(6px);
+  transition:opacity .5s ease,transform .5s cubic-bezier(.2,.7,.3,1);
+}
+.line:last-child{margin-bottom:0;}
+.line.on{opacity:1;transform:none;}
+
+.line .em{
+  display:inline-block;
+  width:.56em;height:.075em;
+  background:currentColor;
+  vertical-align:.32em;
+  margin-right:.13em;
+}
+
+/* The empty space is the design. Play happens quietly at the bottom of it. */
+.space{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:space-between;}
+.nextrow{display:flex;flex-direction:column;align-items:flex-end;gap:8px;padding-top:max(9px,1.3vh);}
+.controls{width:100%;}
+
+/* The one control that carries weight, sitting under the poem on the right. */
+.ghost{
+  background:rgba(255,255,255,.17);
+  border:1px solid rgba(255,255,255,.42);
+  color:#fff;opacity:1;
+  font:600 clamp(10.5px,2.9vw,13px) 'Archivo',sans-serif;
+  letter-spacing:.1em;text-transform:uppercase;
+  padding:13px 22px;cursor:pointer;
+  transition:background-color .2s ease,border-color .2s ease;
+}
+.ghost:hover{background:rgba(255,255,255,.3);border-color:rgba(255,255,255,.78);}
+.ghost.gone{visibility:hidden;}
+.ghost{min-width:150px;text-align:center;}
+.ghost.sub{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.3);font-weight:500;}
+.ghost.sub:hover{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.6);}
+.ghost.sub.hero{background:#fff;color:var(--ink,#E6140F);border-color:#fff;font-weight:600;}
+
+.status{
+  font-size:clamp(8.5px,2.2vw,10.5px);
+  font-weight:500;letter-spacing:.09em;text-transform:uppercase;
+  opacity:.7;margin-bottom:7px;height:1.4em;overflow:hidden;
+}
+.status b{font-weight:600;}
+
+.hint{
+  font-size:clamp(9.5px,2.5vw,11.5px);
+  font-weight:500;letter-spacing:.055em;
+  opacity:.9;margin-bottom:9px;height:1.4em;overflow:hidden;
+}
+.hint.gone{visibility:hidden;}
+
+.slot{position:relative;height:clamp(76px,11.5vh,100px);}
+
+input{
+  position:absolute;bottom:0;left:0;right:0;height:52px;
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.45);
+  color:#fff;
+  font:400 16px 'Archivo',sans-serif;
+  padding:0 15px;outline:none;border-radius:0;
+  transition:background-color .2s ease,border-color .2s ease;
+}
+input:focus{background:rgba(255,255,255,.24);border-color:#fff;}
+input::placeholder{color:rgba(255,255,255,.62);}
+
+/* The reveal is the payoff, so it gets real size. */
+.result{
+  position:absolute;inset:0;display:none;
+  flex-direction:column;justify-content:flex-end;
+}
+.result.on{display:flex;}
+.rtitle{
+  font-family:'Anton',Impact,'Arial Narrow',sans-serif;
+  text-transform:uppercase;line-height:.95;
+  font-size:clamp(23px,7vw,44px);
+  margin-bottom:.22em;
+}
+.rmeta{display:flex;align-items:center;gap:11px;
+  font-size:clamp(9.5px,2.5vw,12px);font-weight:500;
+  letter-spacing:.09em;text-transform:uppercase;opacity:.78;}
+.marks{font:400 clamp(12px,3.2vw,15px) ui-monospace,'SF Mono',Menlo,monospace;letter-spacing:.24em;opacity:1;}
+
+.ac{
+  position:absolute;bottom:calc(100% + 5px);left:0;right:0;
+  background:#fff;color:var(--ink,#E6140F);
+  max-height:min(230px,32vh);overflow-y:auto;
+  display:none;z-index:30;box-shadow:0 -6px 22px rgba(0,0,0,.22);
+}
+.ac.on{display:block;}
+.ac div{
+  padding:10px 13px;font-size:14px;font-weight:500;cursor:pointer;
+  border-bottom:1px solid rgba(0,0,0,.12);
+}
+.ac div:last-child{border-bottom:0;}
+.ac div:hover,.ac div.sel{background:var(--ink,#E6140F);color:#fff;}
+
+
+.rule{height:1.5px;background:currentColor;margin:max(12px,2vh) 0 7px;flex:0 0 auto;}
+
+.foot{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  font-size:clamp(8px,2.05vw,10px);
+  font-weight:500;line-height:1.6;letter-spacing:.01em;
+  flex:0 0 auto;
+}
+.foot .mark span{display:block;white-space:nowrap;}
+.foot .mark i{
+  display:inline-block;width:.6em;height:1px;background:currentColor;
+  vertical-align:.28em;margin-right:.32em;
+}
+.foot .right{text-align:right;}
+.foot .prog{letter-spacing:.3em;margin-bottom:.2em;}
+.foot .ans{opacity:0;transition:opacity .45s ease .1s;height:3.2em;overflow:hidden;}
+.foot .ans.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<div class="poster">
+
+  <div class="lines" id="lines">
+    <div class="inner" id="inner">
+      <span class="line" id="l0"></span>
+      <span class="line" id="l1"></span>
+      <span class="line" id="l2"></span>
+    </div>
+  </div>
+
+  <div class="space">
+    <div class="nextrow">
+      <button class="ghost" id="skip">Next line</button>
+      <button class="ghost sub" id="next">New puzzle</button>
+    </div>
+    <div class="controls">
+      <div class="status" id="status">Line one of three</div>
+      <div class="hint" id="hint">Type a film title, then choose it from the list</div>
+      <div class="slot">
+        <div class="ac" id="ac"></div>
+        <input id="guess" type="text" placeholder="Start typing&hellip;" autocomplete="off" autocorrect="off" spellcheck="false">
+        <div class="result" id="result">
+          <div class="rtitle" id="rtitle"></div>
+          <div class="rmeta">
+            <span class="marks" id="marks"></span>
+            <span id="rtxt"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+  <div class="foot">
+    <div class="mark">
+      <span><i></i>Reel</span>
+      <span><i></i>Haiku</span>
+    </div>
+    <div class="right">
+      <div class="prog" id="prog">&#9633;&#9633;&#9633;</div>
+      <div class="ans" id="ans"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* Ten puzzles. Line one is always the weakest clue, line three the strongest.
+   None names the film, a character, or the director.
+   Colours are assigned deliberately AGAINST the film so the palette never
+   leaks the answer: no green for Jurassic Park, no gold for The Lion King. */
+const PUZZLES = [
+  { lines:["Old blood, kept in stone","Someone builds a park from it","Tickets go on sale"],
+    title:"Jurassic Park", year:1993, ink:"#0E2A33" },
+  { lines:["A gorge, and a lie","The father does not climb out","The son is told: run"],
+    title:"The Lion King", year:1994, ink:"#C43C00" },
+  { lines:["Some grief goes unnamed","He helps a boy who sees ghosts","He has been one too"],
+    title:"The Sixth Sense", year:1999, ink:"#2A2E1C" },
+  { lines:["A town needs summer","Something in the water feeds","The mayor says: swim"],
+    title:"Jaws", year:1975, ink:"#12256B" },
+  { lines:["The wind takes her house","She lands somewhere in colour","She only wants home"],
+    title:"The Wizard of Oz", year:1939, ink:"#4A1D96" },
+  { lines:["She stops for the night","The young man seems kind enough","His mother is dead"],
+    title:"Psycho", year:1960, ink:"#141414" },
+  { lines:["A boy meets his mum","She is seventeen, and keen","He must fix this fast"],
+    title:"Back to the Future", year:1985, ink:"#00646E" },
+  { lines:["Comfort or the truth","Most would take the pleasant lie","The offer is real"],
+    title:"The Matrix", year:1999, ink:"#7A1220" },
+  { lines:["A card game wins him","Passage on the greatest ship","Upstairs, she is bored"],
+    title:"Titanic", year:1997, ink:"#1436CE" },
+  { lines:["The old man says no","Gunmen find him buying fruit","The war starts that day"],
+    title:"The Godfather", year:1972, ink:"#5C1A0E" },
+  { lines:["Beauty as a threat","A woman fears a mirror","More than she fears death"],
+    title:"Snow White and the Seven Dwarfs", year:1937, ink:"#C4006A" },
+  { lines:["Being replaced hurts","Even a plastic cowboy","Fears the newer thing"],
+    title:"Toy Story", year:1995, ink:"#1D5C2E" },
+  { lines:["A deal with a lord","Fetch the princess, get the deed","A donkey comes too"],
+    title:"Shrek", year:2001, ink:"#076B3C" },
+  { lines:["He runs a nightclub","Neutral, he says, about all","Then she walks back in"],
+    title:"Casablanca", year:1942, ink:"#3A2A5E" },
+  { lines:["Who owns a forest","The ones who live in its trees","Or the ones with guns"],
+    title:"Avatar", year:2009, ink:"#0F4C4C" }
+];
+
+const FILMS = ["Alien","Aliens","Amadeus","American Beauty","Amelie","Apocalypse Now","Arrival","Back to the Future","Batman","Beetlejuice","Blade Runner","Braveheart","Bridesmaids","Casablanca","Cast Away","Chinatown","Citizen Kane","Clueless","Coco","Die Hard","Dirty Dancing","Django Unchained","Dr. Strangelove","Dune","E.T. the Extra-Terrestrial","Edward Scissorhands","Fargo","Ferris Bueller's Day Off","Fight Club","Forrest Gump","Frozen","Get Out","Ghostbusters","Gladiator","Gone with the Wind","Goodfellas","Grease","Groundhog Day","Heat","Home Alone","Inception","Independence Day","Indiana Jones and the Last Crusade","Inside Out","Interstellar","It's a Wonderful Life","Jaws","Jurassic Park","Kill Bill","King Kong","La La Land","Labyrinth","Lawrence of Arabia","Life of Pi","Mad Max: Fury Road","Memento","Men in Black","Moulin Rouge!","Mrs. Doubtfire","No Country for Old Men","Oppenheimer","Parasite","Pretty Woman","Psycho","Pulp Fiction","Raiders of the Lost Ark","Rain Man","Ratatouille","Rear Window","Reservoir Dogs","Rocky","Roman Holiday","Schindler's List","Scream","Se7en","Shrek","Sideways","Signs","Singin' in the Rain","Slumdog Millionaire","Snatch","Some Like It Hot","Spirited Away","Stand by Me","Star Wars: A New Hope","Superbad","Taxi Driver","Terminator 2: Judgment Day","The Big Lebowski","The Blair Witch Project","The Breakfast Club","The Dark Knight","The Departed","The Exorcist","The Godfather","The Goonies","The Grand Budapest Hotel","The Green Mile","The Hangover","The Incredibles","The Iron Giant","The Italian Job","The Lion King","The Lord of the Rings: The Fellowship of the Ring","The Matrix","The Notebook","The Princess Bride","The Prestige","The Revenant","The Shawshank Redemption","The Shining","The Sixth Sense","The Silence of the Lambs","The Social Network","The Sound of Music","The Terminator","The Thing","The Truman Show","The Usual Suspects","The Wizard of Oz","Thelma & Louise","Titanic","Top Gun","Toy Story","Trainspotting","Twelve Angry Men","Up","V for Vendetta","Vertigo","WALL-E","Wayne's World","Whiplash","Willy Wonka & the Chocolate Factory","Zodiac","Zombieland","Avatar","The Godfather","Snow White and the Seven Dwarfs","Shrek","The Lion King","Toy Story","The Wizard of Oz","Jaws","Psycho","Titanic","The Matrix","Back to the Future","The Sixth Sense","Jurassic Park","Casablanca"];
+
+let order = [...PUZZLES.keys()], oi = 0;
+let shown = 1, guesses = 0, over = false, sel = -1, matches = [];
+
+const $ = id => document.getElementById(id);
+const lineEls=[$('l0'),$('l1'),$('l2')];
+const linesBox=$('lines'), inner=$('inner'), progEl=$('prog'), ansEl=$('ans'),
+      statusEl=$('status'), input=$('guess'), acEl=$('ac'),
+      resultEl=$('result'), marksEl=$('marks'), rtxtEl=$('rtxt'), rtitleEl=$('rtitle'),
+      skipBtn=$('skip'), nextBtn=$('next'), hintEl=$('hint');
+
+const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];} return a; };
+shuffle(order);
+
+const P = () => PUZZLES[order[oi]];
+const WORD = ['one','two','three'];
+
+/* Largest size at which all three lines, fully wrapped, still fit the box.
+   Fitting against all three rather than the visible ones is what stops the
+   layout moving as lines appear. */
+function fit(){
+  const h = linesBox.clientHeight, w = linesBox.clientWidth;
+  if(!h || !w) return;
+  let lo = 14, hi = 360;
+  for(let i=0;i<20;i++){
+    const mid = (lo + hi) / 2;
+    inner.style.fontSize = mid + 'px';
+    if(inner.scrollHeight <= h && inner.scrollWidth <= w + 1) lo = mid; else hi = mid;
+  }
+  inner.style.fontSize = lo + 'px';
+}
+
+function paint(){
+  const z = P();
+  document.body.style.background = z.ink;
+  document.documentElement.style.setProperty('--ink', z.ink);
+  lineEls.forEach((el,i) => {
+    el.innerHTML = '<span class="em"></span>' + z.lines[i];
+    el.classList.toggle('on', i < shown);
+  });
+  progEl.textContent = [0,1,2].map(i => i < shown ? '\u25A0' : '\u25A1').join('');
+  skipBtn.textContent = shown === 3 ? 'Give up' : 'Next line';
+  fit();
+}
+
+const say = m => statusEl.innerHTML = m;
+
+function finish(won){
+  over = true;
+  const z = P();
+  shown = 3; paint();
+  ansEl.innerHTML = z.title + '<br>' + z.year;
+  ansEl.classList.add('show');
+  input.style.display = 'none';
+  resultEl.classList.add('on');
+  acEl.classList.remove('on');
+  skipBtn.classList.add('gone');
+  hintEl.classList.add('gone');
+  nextBtn.classList.add('hero');
+
+  const marks = ['\u25A1','\u25A1','\u25A1'];
+  if(won) marks[Math.min(guesses,3)-1] = '\u25A0';
+  rtitleEl.textContent = z.title;
+  marksEl.textContent = won ? marks.join('') : '\u2715\u2715\u2715';
+  rtxtEl.textContent = z.year + (won ? '  /  Solved on line ' + WORD[guesses-1] : '  /  Beat me today');
+  say(won ? 'Solved' : 'Missed');
+}
+
+function advance(label){
+  if(shown === 3){ finish(false); return; }
+  shown++; paint();
+  say(label + `Line <b>${WORD[shown-1]}</b> of three`);
+  input.value=''; acEl.classList.remove('on'); sel=-1;
+}
+
+function submit(t){
+  if(over || !t) return;
+  guesses++;
+  if(t === P().title){ finish(true); return; }
+  advance(`Not ${t}. `);
+}
+
+function skip(){ if(over) return; guesses++; advance(''); }
+
+function reset(){
+  oi++; if(oi >= order.length){ shuffle(order); oi = 0; }
+  shown=1; guesses=0; over=false; sel=-1;
+  input.style.display=''; input.value='';
+  resultEl.classList.remove('on');
+  skipBtn.classList.remove('gone'); hintEl.classList.remove('gone');
+  nextBtn.classList.remove('hero');
+  ansEl.classList.remove('show'); ansEl.innerHTML='';
+  acEl.classList.remove('on');
+  paint();
+  say('Line one of three');
+}
+
+input.addEventListener('input', () => {
+  const q = input.value.trim().toLowerCase();
+  sel = -1;
+  if(q.length < 2){ acEl.classList.remove('on'); return; }
+  matches = FILMS.filter(f => f.toLowerCase().includes(q)).slice(0,7);
+  if(!matches.length){ acEl.classList.remove('on'); return; }
+  acEl.innerHTML = matches.map((f,i) => `<div data-i="${i}">${f}</div>`).join('');
+  acEl.classList.add('on');
+});
+
+acEl.addEventListener('click', e => {
+  const d = e.target.closest('div[data-i]');
+  if(d) submit(matches[+d.dataset.i]);
+});
+
+input.addEventListener('keydown', e => {
+  if(!acEl.classList.contains('on')) return;
+  const items = [...acEl.querySelectorAll('div')];
+  if(e.key === 'ArrowDown'){ e.preventDefault(); sel = Math.min(sel+1, items.length-1); }
+  else if(e.key === 'ArrowUp'){ e.preventDefault(); sel = Math.max(sel-1, 0); }
+  else if(e.key === 'Enter'){ e.preventDefault(); submit(matches[sel < 0 ? 0 : sel]); return; }
+  else if(e.key === 'Escape'){ acEl.classList.remove('on'); return; }
+  else return;
+  items.forEach((el,i) => el.classList.toggle('sel', i === sel));
+});
+
+skipBtn.addEventListener('click', skip);
+nextBtn.addEventListener('click', reset);
+
+let rt;
+addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(fit, 120); });
+
+paint();
+/* Refit once the real face loads, or the size is measured against a fallback
+   with completely different metrics. */
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+addEventListener('load', fit);
+</script>
+</body>
+</html>
