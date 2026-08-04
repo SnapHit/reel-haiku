@@ -187,13 +187,17 @@ input::placeholder{color:rgba(255,255,255,.62);}
 }
 .foot .right{text-align:right;}
 .foot .prog{letter-spacing:.3em;margin-bottom:.2em;}
-.foot .ans{opacity:0;transition:opacity .45s ease .1s;height:3.2em;overflow:hidden;}
+/* The signature belongs to the poster, not to the game: on screen the reveal
+   already names the film in full, so the foot stays blank and only clean view
+   and print turn it on. The height is still reserved because the foot is the
+   taller of its two columns, and collapsing it would move the rule, the mark
+   and the input by 14px. */
+.foot .ans{opacity:0;height:3.2em;overflow:hidden;}
 .credit{
   flex:0 0 auto;margin-top:6px;
   font-size:clamp(7.5px,1.95vw,9.5px);font-weight:400;
   letter-spacing:.06em;opacity:.5;
 }
-.foot .ans.show{opacity:1;}
 .back{display:none;white-space:nowrap;font-weight:500;letter-spacing:.1em;text-transform:uppercase;}
 
 /* Clean view: the interface goes and the poem takes the room it leaves.
@@ -392,8 +396,8 @@ function finish(won){
   over = true;
   const z = P();
   shown = 3; paint();
+  /* Written for the poster surfaces to pick up. On screen it stays hidden. */
   ansEl.innerHTML = z.t + '<br>' + z.y;
-  ansEl.classList.add('show');
   input.style.display = 'none';
   resultEl.classList.add('on');
   acEl.classList.remove('on');
@@ -437,7 +441,7 @@ function reset(){
   nextBtn.classList.remove('hero');
   nextrowEl.classList.remove('over');
   document.body.classList.remove('done');
-  ansEl.classList.remove('show'); ansEl.innerHTML='';
+  ansEl.innerHTML='';
   acEl.classList.remove('on');
   paint();
   say('Line one of three');
