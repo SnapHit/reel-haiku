@@ -1,0 +1,63 @@
+name: Archive
+
+# Builds the archive pages, the index, the sitemap and robots.txt, and commits
+# them if anything changed. Cloudflare deploys from the push.
+#
+# The generator is idempotent and catches up, so it writes every page that
+# ought to exist rather than only yesterday's. A missed run is a non event:
+# the next one produces exactly the same result.
+#
+# GitHub disables scheduled workflows in a public repository after 60 days of
+# repository inactivity, and emails the repository admins when it does. A
+# commit made with the built in GITHUB_TOKEN does not start a workflow run,
+# and should not be relied on to count as activity. That is guarded three ways:
+# this also runs on every push to main, it can be run by hand from the Actions
+# tab, and because the generator catches up, one run after any silence
+# restores the archive completely.
+
+on:
+  schedule:
+    # 00:10 UTC, just after the day turns, which is when a new day becomes
+    # eligible. The exact minute does not matter: the archive trails by a week.
+    - cron: '10 0 * * *'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: archive
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build the archive
+        run: node tools/archive.mjs
+
+      - name: Commit if anything changed
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "nothing to do"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add archive sitemap.xml robots.txt 404.html
+          NEW=$(git diff --cached --name-only --diff-filter=A -- archive | grep -c 'archive/[0-9]' || true)
+          if [ "$NEW" -gt 0 ]; then
+            DAY=$(git diff --cached --name-only --diff-filter=A -- archive | grep -o '[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}' | sort | tail -1)
+            git commit -m "Archive: add ${DAY}"
+          else
+            git commit -m "Archive: refresh generated pages"
+          fi
+          git push

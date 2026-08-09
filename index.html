@@ -374,6 +374,7 @@ const FROM = 1940;
    EPOCH and SEED must never move. Every day number, and every share card
    anybody has already posted, is counted from them: change either and every
    player's history renumbers under them. */
+/* archive:schedule:start */
 const EPOCH = Date.UTC(2026, 7, 9);        /* 9 August 2026, UTC midnight */
 const SEED = 20260809;
 const DAY = 86400000;
@@ -429,6 +430,7 @@ function schedule(){
   }
   return a;
 }
+/* archive:schedule:end */
 
 /* Progress lives on the device and nowhere else. Every touch is wrapped, so a
    browser with storage switched off plays perfectly and simply forgets. */
@@ -810,7 +812,7 @@ function tick(){
    304 and no body. A version in the query string only worked when somebody
    remembered to bump it, and content has already shipped stale because nobody
    did. This asks every time and costs nothing when the answer is no change. */
-Promise.all([
+if(!self.ARCHIVE) Promise.all([
   fetch('puzzles.json', {cache: 'no-cache'}).then(r => r.json()),
   fetch('titles.json', {cache: 'no-cache'}).then(r => r.json())
 ]).then(([p, t]) => {
