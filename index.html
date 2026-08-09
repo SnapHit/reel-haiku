@@ -4,6 +4,33 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Reel Haiku</title>
+<meta name="description" content="A daily film puzzle in three lines. Read the haiku, name the film, and keep the poem as a poster.">
+<link rel="canonical" href="https://reelhaiku.com/">
+<meta name="theme-color" content="#E6140F">
+
+<!-- Relative so the icons resolve whether the site is served from the domain
+     root or from a subpath. The sharing images must be absolute: a relative
+     one silently fails in most scrapers. -->
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Reel Haiku">
+<meta property="og:title" content="Reel Haiku">
+<meta property="og:description" content="A daily film puzzle in three lines. Read the haiku, name the film, and keep the poem as a poster.">
+<meta property="og:url" content="https://reelhaiku.com/">
+<meta property="og:image" content="https://reelhaiku.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Reel Haiku mark, a film reel beside the words Reel Haiku, above the line a daily film puzzle in three lines.">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Reel Haiku">
+<meta name="twitter:description" content="A daily film puzzle in three lines. Read the haiku, name the film, and keep the poem as a poster.">
+<meta name="twitter:image" content="https://reelhaiku.com/og.png">
+<meta name="twitter:image:alt" content="The Reel Haiku mark, a film reel beside the words Reel Haiku, above the line a daily film puzzle in three lines.">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
@@ -86,6 +113,12 @@ body{
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 
+/* The era belongs to the random mode, and keep playing to a finished day, so
+   the row holds two buttons in every state and the poem keeps its height. */
+#eramenu,#more{display:none;}
+body.random #eramenu{display:flex;}
+body.daydone:not(.random) #more{display:block;}
+
 .status{
   font-size:clamp(8.5px,2.2vw,10.5px);
   font-weight:500;letter-spacing:.09em;text-transform:uppercase;
@@ -99,6 +132,11 @@ body{
   opacity:.9;margin-bottom:9px;height:1.4em;overflow:hidden;
 }
 .hint.gone{visibility:hidden;}
+/* The way back out of the random mode, quiet enough to sit in the hint line. */
+.hint button{
+  background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer;
+  text-decoration:underline;text-underline-offset:2px;
+}
 
 .slot{position:relative;height:clamp(76px,11.5vh,100px);}
 
@@ -180,11 +218,10 @@ input::placeholder{color:rgba(255,255,255,.62);}
   font-weight:500;line-height:1.6;letter-spacing:.01em;
   flex:0 0 auto;
 }
-.foot .mark span{display:block;white-space:nowrap;}
-.foot .mark i{
-  display:inline-block;width:.6em;height:1px;background:currentColor;
-  vertical-align:.28em;margin-right:.32em;
-}
+/* The mark, at exactly the height the two stacked words had, so the foot keeps
+   its height on screen and on paper. It is white artwork on transparency, so
+   it sits on whatever colour the puzzle is wearing. */
+.foot .mark img{display:block;height:3.2em;width:auto;}
 .foot .right{text-align:right;}
 .foot .prog{letter-spacing:.3em;margin-bottom:.2em;}
 /* The signature belongs to the poster, not to the game: on screen the reveal
@@ -279,17 +316,18 @@ body.bare .back{display:block;}
           <div class="ac pop" id="sizes"></div>
         </div>
       </div>
-      <button class="ghost" id="skip">Next line</button>
+      <button class="ghost" id="skip">Next clue</button>
       <div class="row">
-        <div class="menu">
+        <div class="menu" id="eramenu">
           <button class="ghost sub sm" id="erabtn">All decades</button>
           <div class="ac pop" id="eras"></div>
         </div>
+        <button class="ghost sub sm" id="more">Keep playing</button>
         <button class="ghost sub" id="next">New puzzle</button>
       </div>
     </div>
     <div class="controls">
-      <div class="status" id="status">Line one of three</div>
+      <div class="status" id="status">Clue one of three</div>
       <div class="hint" id="hint">Type a film title, then choose it from the list</div>
       <div class="slot">
         <div class="ac" id="ac"></div>
@@ -307,17 +345,14 @@ body.bare .back{display:block;}
 
   <div class="rule"></div>
   <div class="foot">
-    <div class="mark">
-      <span><i></i>Reel</span>
-      <span><i></i>Haiku</span>
-    </div>
+    <div class="mark"><img src="logo-white.png" alt="Reel Haiku"></div>
     <div class="right">
       <div class="prog" id="prog">&#9633;&#9633;&#9633;</div>
       <div class="ans" id="ans"></div>
     </div>
   </div>
 
-  <div class="credit">Created by Mike Lindsey and Nathan Haslewood<span class="back">Tap anywhere to go back</span></div>
+  <div class="credit">Created by Mike Linsey and Nathan Haslewood<span class="back">Tap anywhere to go back</span></div>
 
 </div>
 
@@ -362,6 +397,98 @@ const ERAS = [
 ];
 let POOLS = [], era = 0;
 
+/* The daily game. Three puzzles a day, the same three for everybody, worked
+   out on the device with nothing to ask a server.
+
+   EPOCH and SEED must never move. Every day number, and every share card
+   anybody has already posted, is counted from them: change either and every
+   player's history renumbers under them. */
+const EPOCH = Date.UTC(2026, 7, 9);        /* 9 August 2026, UTC midnight */
+const SEED = 20260809;
+const DAY = 86400000;
+const GAP = 2;                             /* days before a film may come round again */
+const HOME = 'https://reelhaiku.com';
+const STORE = 'reelhaiku';
+
+/* Rollover is UTC midnight everywhere, which is 10am in Melbourne. Date.now
+   is UTC, so the day never reads the device clock's timezone. */
+const dayNumber = () => Math.max(0, Math.floor((Date.now() - EPOCH) / DAY));
+
+/* mulberry32. Integer ops throughout, so every browser walks the same
+   sequence from the same seed. */
+const rng = s => () => {
+  s = s + 0x6D2B79F5 | 0;
+  let t = Math.imul(s ^ s >>> 15, 1 | s);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+  return ((t ^ t >>> 14) >>> 0) / 4294967296;
+};
+
+let SCHED = [], DAYS = 0, today = 0, res = [null,null,null], streak = 0, mode = 'daily';
+
+/* One shuffle of the whole corpus, then day N takes 3N, 3N+1 and 3N+2. */
+function schedule(){
+  const r = rng(SEED);
+  const a = PUZZLES.map((z, i) => i);
+  for(let i = a.length - 1; i > 0; i--){ const j = (r() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; }
+  /* The same film must not come round again inside GAP days. Twice in one day
+     hands over the answer in the same sitting, and two days running is nearly
+     as bad: the second puzzle is dead on arrival. A plain shuffle does both,
+     because the corpus is two hundred films of three haiku each, so clashes
+     are swapped forward in a fixed order, which leaves the schedule a pure
+     function of the seed.
+
+     Two is deliberately short of what this seed can reach. Reaching further is
+     luck of the arrangement, and a repair that overreaches and then fails to
+     find a swap leaves a clash worse than the one it was chasing. */
+  const name = i => PUZZLES[i].t;
+  const near = (at, val, x, y) => {
+    const d = (at / 3) | 0;
+    const lo = Math.max(0, (d - GAP + 1) * 3), hi = Math.min(a.length, (d + GAP) * 3);
+    for(let k = lo; k < hi; k++) if(k !== x && k !== y && name(a[k]) === val) return true;
+    return false;
+  };
+  for(let i = 0; i < a.length; i++){
+    if(!near(i, name(a[i]), i, -1)) continue;
+    for(let j = i + 1; j < a.length; j++){
+      if(!near(i, name(a[j]), i, j) && !near(j, name(a[i]), i, j)){
+        [a[i], a[j]] = [a[j], a[i]];
+        break;
+      }
+    }
+  }
+  return a;
+}
+
+/* Progress lives on the device and nowhere else. Every touch is wrapped, so a
+   browser with storage switched off plays perfectly and simply forgets. */
+const stored = () => { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch(e){ return {}; } };
+const store = s => { try { localStorage.setItem(STORE, JSON.stringify(s)); } catch(e){} };
+
+const dayDone = () => res.every(v => v !== null);
+const rolled = () => dayNumber() !== today;
+
+function loadDay(){
+  today = dayNumber();
+  const s = stored();
+  res = (s.day === today && Array.isArray(s.res) && s.res.length === 3) ? s.res.slice() : [null,null,null];
+  /* A streak survives yesterday and nothing older. */
+  streak = (s.last === today || s.last === today - 1) ? (s.streak || 0) : 0;
+}
+
+/* The streak counts days played, not days won. A player can be handed three
+   films they have never seen, which is the corpus's doing and not theirs. */
+function record(slot, mark){
+  res[slot] = mark;
+  const s = stored();
+  let run = s.streak || 0, last = s.last;
+  if(dayDone() && last !== today){
+    run = last === today - 1 ? run + 1 : 1;
+    last = today;
+  }
+  streak = (last === today || last === today - 1) ? run : 0;
+  store({ day: today, res, streak: run, last });
+}
+
 /* Largest size at which all three lines, fully wrapped, still fit the box.
    Fitting against all three rather than the visible ones is what stops the
    layout moving as lines appear. */
@@ -387,11 +514,12 @@ function paint(){
     el.classList.toggle('on', i < shown);
   });
   progEl.textContent = [0,1,2].map(i => i < shown ? '\u25A0' : '\u25A1').join('');
-  skipBtn.textContent = shown === 3 ? 'Give up' : 'Next line';
+  skipBtn.textContent = shown === 3 ? 'Give up' : 'Next clue';
   fit();
 }
 
 const say = m => statusEl.innerHTML = m;
+const clue = () => `Clue <b>${WORD[shown-1]}</b> of three`;
 
 function finish(won){
   over = true;
@@ -403,7 +531,6 @@ function finish(won){
   resultEl.classList.add('on');
   acEl.classList.remove('on');
   skipBtn.classList.add('gone');
-  hintEl.classList.add('gone');
   nextBtn.classList.add('hero');
   nextrowEl.classList.add('over');
   document.body.classList.add('done');
@@ -412,40 +539,152 @@ function finish(won){
   if(won) marks[Math.min(guesses,3)-1] = '\u25A0';
   rtitleEl.textContent = z.t;
   marksEl.textContent = won ? marks.join('') : '\u2715\u2715\u2715';
-  rtxtEl.textContent = z.y + (won ? '  /  Solved on line ' + WORD[guesses-1] : '  /  Beat me today');
+  rtxtEl.textContent = z.y + (won ? '  /  Solved on clue ' + WORD[guesses-1] : '  /  Beat me today');
   say(won ? 'Solved' : 'Missed');
+  /* Only the daily game keeps a record. Playing at random writes nothing. */
+  if(mode === 'daily') record(oi, won ? Math.min(guesses,3) : 'x');
+  controls(); dayline();
 }
 
 function advance(label){
   if(shown === 3){ finish(false); return; }
   shown++; paint();
-  say(label + `Line <b>${WORD[shown-1]}</b> of three`);
+  say(label + clue());
   input.value=''; acEl.classList.remove('on'); sel=-1;
 }
 
 function submit(f){
   if(over || !f) return;
-  guesses++;
   const z = P();
-  if(f[0] === z.t && f[1] === z.y){ finish(true); return; }
+  if(f[0] === z.t && f[1] === z.y){ guesses++; finish(true); return; }
+  /* A few titles are in the list twice because both versions are notable
+     enough to keep and one of them is somebody's answer. Naming the right
+     film and the wrong version is a coin flip on a year, not a wrong answer,
+     so it costs no guess and the clue count stays where it is. */
+  if(f[0] === z.t){
+    say('Right film, wrong version. ' + clue());
+    input.value=''; acEl.classList.remove('on'); sel=-1;
+    return;
+  }
+  guesses++;
   advance(`Not ${f[0]}. `);
 }
 
 function skip(){ if(over) return; guesses++; advance(''); }
 
-function reset(){
-  oi++; if(oi >= order.length){ shuffle(order); oi = 0; }
+/* Clears the board for whatever oi now points at. Choosing what that is
+   belongs to the mode, not to here. */
+function start(){
   shown=1; guesses=0; over=false; sel=-1;
   input.style.display=''; input.value='';
   resultEl.classList.remove('on');
-  skipBtn.classList.remove('gone'); hintEl.classList.remove('gone');
+  skipBtn.classList.remove('gone');
   nextBtn.classList.remove('hero');
   nextrowEl.classList.remove('over');
   document.body.classList.remove('done');
   ansEl.innerHTML='';
   acEl.classList.remove('on');
   paint();
-  say('Line one of three');
+  say('Clue one of three');
+  controls(); dayline();
+}
+
+const nextRandom = () => { oi++; if(oi >= order.length){ shuffle(order); oi = 0; } start(); };
+const nextDaily = () => { const i = res.indexOf(null); if(i >= 0){ oi = i; start(); } };
+
+/* Coming back to a day that is already finished shows the last of the three
+   as it ended, so the poem, clean view and the poster all still work. */
+function showDone(){
+  oi = 2;
+  const v = res[2];
+  shown = 3; guesses = v === 'x' ? 3 : v; over = false;
+  finish(v !== 'x');
+}
+
+/* Two modes, one board. The daily record is only ever written in daily mode,
+   so playing at random cannot touch today's results or the streak. */
+function toRandom(){
+  mode = 'random';
+  order = shuffle(POOLS[era].slice());
+  oi = 0;
+  start();
+}
+function toDaily(){
+  mode = 'daily';
+  order = SCHED.slice((today % DAYS) * 3, (today % DAYS) * 3 + 3);
+  const i = res.indexOf(null);
+  if(i < 0) showDone(); else { oi = i; start(); }
+}
+
+const HINT = 'Type a film title, then choose it from the list';
+const LEFT = ['', 'Two more today', 'One more today'];
+
+function countdown(){
+  const ms = EPOCH + (today + 1) * DAY - Date.now();
+  if(ms <= 0) return null;
+  const h = Math.floor(ms / 3600000), m = Math.floor(ms % 3600000 / 60000);
+  return h ? h + 'h ' + m + 'm' : m ? m + 'm' : Math.floor(ms / 1000) + 's';
+}
+
+/* Whatever the day has to say, in the hint slot. The result state already
+   leaves that line empty, so it costs no height, and being inside the play
+   column it is hidden in clean view and in print along with everything else
+   there. It says nothing at all until a puzzle is over. */
+function dayline(){
+  hintEl.classList.remove('gone');
+  if(!over){ hintEl.textContent = HINT; return; }
+  if(mode === 'random'){
+    hintEl.innerHTML = '<button id="back2">Back to today</button>';
+    $('back2').addEventListener('click', e => { e.stopPropagation(); toDaily(); });
+    return;
+  }
+  if(!dayDone()){ hintEl.textContent = LEFT[res.filter(v => v !== null).length]; return; }
+  const t = rolled() ? null : countdown();
+  hintEl.textContent = t ? (streak > 1 ? 'Streak ' + streak + ' days. ' : '') + 'Next puzzles in ' + t
+                         : 'New puzzles are ready';
+}
+
+function controls(){
+  const rnd = mode === 'random', done = dayDone();
+  document.body.classList.toggle('random', rnd);
+  document.body.classList.toggle('daydone', done);
+  nextBtn.textContent = rnd ? 'New puzzle'
+                      : !done ? 'Next puzzle'
+                      : rolled() ? 'Play today' : 'Share';
+  /* The daily game does not let you shuffle past today's puzzle. */
+  nextBtn.classList.toggle('gone', !rnd && !over);
+}
+
+/* Spoiler free by construction: three groups of glyphs saying which clue each
+   puzzle fell on, the day number and the address. No titles, no years, no
+   clue text ever goes near it. */
+function card(){
+  const box = '\u25A1', full = '\u25A0', cross = '\u2715';
+  const rows = res.map(v => v === null ? box + box + box
+    : v === 'x' ? cross + cross + cross
+    : [0,1,2].map(i => i === v - 1 ? full : box).join('')).join(' ');
+  return 'Reel Haiku #' + (today + 1) + '\n' + rows + '\n' + HOME;
+}
+
+let copyT;
+async function share(){
+  const text = card();
+  if(navigator.share){
+    try { await navigator.share({ text }); return; } catch(e){ return; }
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:0;';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch(e2){}
+    ta.remove();
+  }
+  nextBtn.textContent = 'Copied';
+  clearTimeout(copyT);
+  copyT = setTimeout(controls, 1800);
 }
 
 /* Choosing an era reshuffles that pool and starts a fresh puzzle from it. The
@@ -457,8 +696,8 @@ function pick(e){
   eraBtn.textContent = ERAS[e][0];
   [...eraEl.children].forEach((d,i) => d.classList.toggle('sel', i === e));
   order = shuffle(POOLS[e].slice());
-  oi = -1;
-  reset();
+  oi = 0;
+  start();
 }
 
 const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -500,7 +739,13 @@ input.addEventListener('keydown', e => {
 });
 
 skipBtn.addEventListener('click', skip);
-nextBtn.addEventListener('click', reset);
+nextBtn.addEventListener('click', () => {
+  if(mode === 'random'){ nextRandom(); return; }
+  if(!dayDone()){ nextDaily(); return; }
+  if(rolled()){ loadDay(); begin(); return; }
+  share();
+});
+$('more').addEventListener('click', toRandom);
 
 /* One chooser open at a time, and a click anywhere shuts it. */
 const shut = () => { eraEl.classList.remove('on'); sizeEl.classList.remove('on'); };
@@ -607,6 +852,48 @@ addEventListener('beforeprint', () => { if(over) printFit(); });
 let rt;
 addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(fit, 120); });
 
+/* Everything the day needs, in the order it needs it. */
+function begin(){
+  loadDay();
+  SCHED = schedule();
+  DAYS = Math.floor(SCHED.length / 3);
+  const at = (today % DAYS) * 3;
+  const trio = SCHED.slice(at, at + 3);
+
+  /* Today's three are kept out of the random pool, so wandering into the
+     other mode cannot spoil them. The era counts are read off the pools once,
+     here, rather than counted again every time the list is opened. */
+  const spare = new Set(trio);
+  POOLS = ERAS.map(([, lo, hi]) => {
+    const a = [];
+    PUZZLES.forEach((z, i) => { if(z.y >= lo && z.y <= hi && !spare.has(i)) a.push(i); });
+    return a;
+  });
+  eraEl.innerHTML = ERAS.map((e, i) =>
+    `<div data-e="${i}"${POOLS[i].length ? '' : ' class="off"'}>` +
+    `<span class="t">${e[0]}</span><span class="y">${POOLS[i].length}</span></div>`).join('');
+  if(!PUZZLES.length){ say('Could not load puzzles'); return; }
+
+  mode = 'daily';
+  order = trio;
+  const i = res.indexOf(null);
+  if(i < 0) showDone(); else { oi = i; start(); }
+  tick();
+}
+
+/* One timer, and it only ever writes the day line. The countdown is not
+   allowed anywhere else: it lives in the play column, so clean view and print
+   drop it along with everything else there. */
+let tickT, wasRolled = false;
+function tick(){
+  clearTimeout(tickT);
+  if(over && mode === 'daily'){
+    dayline();
+    if(rolled() !== wasRolled){ wasRolled = rolled(); controls(); }
+  }
+  tickT = setTimeout(tick, 1000);
+}
+
 /* Content is fetched rather than inlined, so the file stays editable and the
    same shape works for the real site.
 
@@ -621,18 +908,7 @@ Promise.all([
 ]).then(([p, t]) => {
   PUZZLES = p.puzzles.filter(z => z.y >= FROM);
   FILMS = t;
-  /* Each era is bucketed once, here, so the counts in the list are read off
-     the pools rather than counted again every time the list is opened. */
-  POOLS = ERAS.map(([, lo, hi]) => {
-    const a = [];
-    PUZZLES.forEach((z, i) => { if(z.y >= lo && z.y <= hi) a.push(i); });
-    return a;
-  });
-  eraEl.innerHTML = ERAS.map((e, i) =>
-    `<div data-e="${i}"${POOLS[i].length ? '' : ' class="off"'}>` +
-    `<span class="t">${e[0]}</span><span class="y">${POOLS[i].length}</span></div>`).join('');
-  if(!POOLS[0].length){ say('Could not load puzzles'); return; }
-  pick(0);
+  begin();
 }).catch(() => {
   say('Could not load puzzles');
 });
