@@ -422,9 +422,18 @@ function advance(label){
 
 function submit(f){
   if(over || !f) return;
-  guesses++;
   const z = P();
-  if(f[0] === z.t && f[1] === z.y){ finish(true); return; }
+  if(f[0] === z.t && f[1] === z.y){ guesses++; finish(true); return; }
+  /* A few titles are in the list twice because both versions are notable
+     enough to keep and one of them is somebody's answer. Naming the right
+     film and the wrong version is a coin flip on a year, not a wrong answer,
+     so it costs no guess and the clue count stays where it is. */
+  if(f[0] === z.t){
+    say('Right film, wrong version. ' + clue());
+    input.value=''; acEl.classList.remove('on'); sel=-1;
+    return;
+  }
+  guesses++;
   advance(`Not ${f[0]}. `);
 }
 
