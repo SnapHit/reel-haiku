@@ -289,7 +289,7 @@ body.bare .back{display:block;}
       </div>
     </div>
     <div class="controls">
-      <div class="status" id="status">Line one of three</div>
+      <div class="status" id="status">Clue one of three</div>
       <div class="hint" id="hint">Type a film title, then choose it from the list</div>
       <div class="slot">
         <div class="ac" id="ac"></div>
@@ -387,11 +387,12 @@ function paint(){
     el.classList.toggle('on', i < shown);
   });
   progEl.textContent = [0,1,2].map(i => i < shown ? '\u25A0' : '\u25A1').join('');
-  skipBtn.textContent = shown === 3 ? 'Give up' : 'Next line';
+  skipBtn.textContent = shown === 3 ? 'Give up' : 'Next clue';
   fit();
 }
 
 const say = m => statusEl.innerHTML = m;
+const clue = () => `Clue <b>${WORD[shown-1]}</b> of three`;
 
 function finish(won){
   over = true;
@@ -412,14 +413,14 @@ function finish(won){
   if(won) marks[Math.min(guesses,3)-1] = '\u25A0';
   rtitleEl.textContent = z.t;
   marksEl.textContent = won ? marks.join('') : '\u2715\u2715\u2715';
-  rtxtEl.textContent = z.y + (won ? '  /  Solved on line ' + WORD[guesses-1] : '  /  Beat me today');
+  rtxtEl.textContent = z.y + (won ? '  /  Solved on clue ' + WORD[guesses-1] : '  /  Beat me today');
   say(won ? 'Solved' : 'Missed');
 }
 
 function advance(label){
   if(shown === 3){ finish(false); return; }
   shown++; paint();
-  say(label + `Line <b>${WORD[shown-1]}</b> of three`);
+  say(label + clue());
   input.value=''; acEl.classList.remove('on'); sel=-1;
 }
 
@@ -445,7 +446,7 @@ function reset(){
   ansEl.innerHTML='';
   acEl.classList.remove('on');
   paint();
-  say('Line one of three');
+  say('Clue one of three');
 }
 
 /* Choosing an era reshuffles that pool and starts a fresh puzzle from it. The
