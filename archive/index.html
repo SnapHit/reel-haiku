@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reel Haiku archive</title>
+<meta name="description" content="Past days of Reel Haiku will appear here, a week after they are played.">
+<link rel="canonical" href="https://reelhaiku.com/archive">
+<meta name="theme-color" content="#E6140F">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Reel Haiku">
+<meta property="og:title" content="Reel Haiku archive">
+<meta property="og:description" content="Past days of Reel Haiku will appear here, a week after they are played.">
+<meta property="og:url" content="https://reelhaiku.com/archive">
+<meta property="og:image" content="https://reelhaiku.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Reel Haiku archive">
+<meta name="twitter:description" content="Past days of Reel Haiku will appear here, a week after they are played.">
+<meta name="twitter:image" content="https://reelhaiku.com/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+
+body{
+  font-family:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:#E6140F;
+  color:#fff;
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+  transition:background-color .65s ease;
+}
+
+.poster{
+  height:100vh;height:100dvh;
+  display:flex;flex-direction:column;
+  padding:max(18px,3vh) max(18px,4.5vw) max(14px,2.2vh);
+  max-width:900px;margin:0 auto;
+}
+
+/* The haiku owns the top half. Everything else is deliberately small. */
+.lines{flex:0 0 49%;min-height:0;overflow:hidden;}
+.inner{display:block;}
+
+.line{
+  font-family:'Anton',Impact,'Arial Narrow',sans-serif;
+  text-transform:uppercase;
+  line-height:.90;
+  margin-bottom:.06em;
+  display:block;
+  opacity:0;
+  transform:translateY(6px);
+  transition:opacity .5s ease,transform .5s cubic-bezier(.2,.7,.3,1);
+}
+.line:last-child{margin-bottom:0;}
+.line.on{opacity:1;transform:none;}
+
+.line .em{
+  display:inline-block;
+  width:.56em;height:.075em;
+  background:currentColor;
+  vertical-align:.32em;
+  margin-right:.13em;
+}
+
+/* The empty space is the design. Play happens quietly at the bottom of it. */
+.space{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:space-between;}
+.nextrow{
+  display:flex;flex-direction:column;align-items:flex-end;gap:8px;
+  padding-top:max(9px,1.3vh);width:max-content;margin-left:auto;
+}
+.controls{width:100%;}
+
+/* The one control that carries weight, sitting under the poem on the right. */
+.ghost{
+  background:rgba(255,255,255,.17);
+  border:1px solid rgba(255,255,255,.42);
+  color:#fff;opacity:1;
+  font:600 clamp(10.5px,2.9vw,13px) 'Archivo',sans-serif;
+  letter-spacing:.1em;text-transform:uppercase;
+  padding:13px 22px;cursor:pointer;
+  transition:background-color .2s ease,border-color .2s ease;
+}
+.ghost:hover{background:rgba(255,255,255,.3);border-color:rgba(255,255,255,.78);}
+.ghost.gone{visibility:hidden;}
+.ghost{min-width:150px;text-align:center;}
+.ghost.sub{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.3);font-weight:500;}
+.ghost.sub:hover{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.6);}
+.ghost.sub.hero{background:#fff;color:var(--ink,#E6140F);border-color:#fff;font-weight:600;}
+
+/* Two rows of controls and never more, so the poem keeps every pixel of the
+   height it had. The row of finishing actions takes the place the give up
+   button vacates.
+
+   The block is only as wide as its widest row, and the one action left on the
+   second row fills that width. Three puzzles and then the wait is the whole
+   proposition, so the last thing on screen should look deliberate rather than
+   like somewhere a fourth control used to be. */
+.row{display:flex;gap:8px;min-width:0;}
+.nextrow.over #herorow{align-self:stretch;}
+.nextrow.over #herorow #next{flex:1;}
+#endrow{display:none;}
+.nextrow.over #endrow{display:flex;}
+.nextrow.over #skip{display:none;}
+.ghost.sm{
+  min-width:0;padding:13px 15px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+
+.status{
+  font-size:clamp(8.5px,2.2vw,10.5px);
+  font-weight:500;letter-spacing:.09em;text-transform:uppercase;
+  opacity:.7;margin-bottom:7px;height:1.4em;overflow:hidden;
+}
+.status b{font-weight:600;}
+
+.hint{
+  font-size:clamp(9.5px,2.5vw,11.5px);
+  font-weight:500;letter-spacing:.055em;
+  opacity:.9;margin-bottom:9px;height:1.4em;overflow:hidden;
+}
+.hint.gone{visibility:hidden;}
+
+.slot{position:relative;height:clamp(76px,11.5vh,100px);}
+
+input{
+  position:absolute;bottom:0;left:0;right:0;height:52px;
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.45);
+  color:#fff;
+  font:400 16px 'Archivo',sans-serif;
+  padding:0 15px;outline:none;border-radius:0;
+  transition:background-color .2s ease,border-color .2s ease;
+}
+input:focus{background:rgba(255,255,255,.24);border-color:#fff;}
+input::placeholder{color:rgba(255,255,255,.62);}
+
+/* The reveal is the payoff, so it gets real size. */
+.result{
+  position:absolute;inset:0;display:none;
+  flex-direction:column;justify-content:flex-end;
+}
+.result.on{display:flex;}
+.rtitle{
+  font-family:'Anton',Impact,'Arial Narrow',sans-serif;
+  text-transform:uppercase;line-height:.95;
+  font-size:clamp(23px,7vw,44px);
+  margin-bottom:.22em;
+}
+.rmeta{display:flex;align-items:center;gap:11px;
+  font-size:clamp(9.5px,2.5vw,12px);font-weight:500;
+  letter-spacing:.09em;text-transform:uppercase;opacity:.78;}
+.marks{font:400 clamp(12px,3.2vw,15px) ui-monospace,'SF Mono',Menlo,monospace;letter-spacing:.24em;opacity:1;}
+
+.ac{
+  position:absolute;bottom:calc(100% + 5px);left:0;right:0;
+  background:#fff;color:var(--ink,#E6140F);
+  max-height:min(230px,32vh);overflow-y:auto;
+  display:none;z-index:30;box-shadow:0 -6px 22px rgba(0,0,0,.22);
+}
+.ac.on{display:block;}
+.ac div{
+  display:flex;align-items:baseline;gap:10px;
+  padding:12px 14px;cursor:pointer;
+  border-bottom:1px solid rgba(0,0,0,.09);
+}
+.ac div:last-child{border-bottom:0;}
+.ac div:hover,.ac div.sel{background:var(--ink,#E6140F);color:#fff;}
+.ac .t{
+  flex:1;font-size:15px;font-weight:600;letter-spacing:-.005em;
+  line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.ac .y{
+  font:400 12px ui-monospace,'SF Mono',Menlo,monospace;
+  opacity:.5;flex:0 0 auto;letter-spacing:.02em;
+}
+.ac div:hover .y,.ac div.sel .y{opacity:.75;}
+
+/* The sheet chooser, drawn as the autocomplete is drawn, opening down into
+   the empty middle rather than up across the poem. */
+.menu{position:relative;display:flex;min-width:0;}
+.pop{
+  top:calc(100% + 5px);bottom:auto;left:auto;right:0;
+  width:232px;max-width:80vw;max-height:none;
+  box-shadow:0 6px 22px rgba(0,0,0,.22);
+}
+.pop div{padding:9px 14px;}
+.pop .t{font-size:13.5px;}
+
+.rule{height:1.5px;background:currentColor;margin:max(12px,2vh) 0 7px;flex:0 0 auto;}
+
+.foot{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  font-size:clamp(8px,2.05vw,10px);
+  font-weight:500;line-height:1.6;letter-spacing:.01em;
+  flex:0 0 auto;
+}
+/* The mark, at exactly the height the two stacked words had, so the foot keeps
+   its height on screen and on paper. It is white artwork on transparency, so
+   it sits on whatever colour the puzzle is wearing. */
+.foot .mark img{display:block;height:3.2em;width:auto;}
+.foot .right{text-align:right;}
+.foot .prog{letter-spacing:.3em;margin-bottom:.2em;}
+/* The signature belongs to the poster, not to the game: on screen the reveal
+   already names the film in full, so the foot stays blank and only clean view
+   and print turn it on. The height is still reserved because the foot is the
+   taller of its two columns, and collapsing it would move the rule, the mark
+   and the input by 14px. */
+.foot .ans{opacity:0;height:3.2em;overflow:hidden;}
+.credit{
+  flex:0 0 auto;margin-top:6px;
+  font-size:clamp(7.5px,1.95vw,9.5px);font-weight:400;
+  letter-spacing:.06em;opacity:.5;
+}
+.back{display:none;white-space:nowrap;font-weight:500;letter-spacing:.1em;text-transform:uppercase;}
+
+/* Clean view: the interface goes and the room it was using stays empty. The
+   poem keeps its 49%, which is the share the sheet gives it too, so this is
+   the printed poster on a screen rather than a bigger version of the poem.
+   The same rules as the print block, over the same elements, and only the box
+   they are given to fill is different. */
+body.bare .space>*{display:none;}
+body.bare .foot .prog{display:none;}
+body.bare .foot .ans{opacity:1;height:auto;overflow:visible;}
+body.bare .credit{display:flex;justify-content:space-between;gap:12px;}
+body.bare .back{display:block;}
+
+/* Print geometry, held as fractions of the sheet. The type fit reads these
+   too, so the measurement and the print rules cannot drift apart. */
+:root{--p-pad-t:6.4%;--p-pad-x:7%;--p-pad-b:5.4%;--p-poem:49%;}
+
+/* Paper. The same poster, measured against the page box rather than the
+   viewport, which has no meaning here. Everything is scoped to body.done, so
+   these rules are unreachable until the puzzle is over and the poem is whole.
+   Sizes are proportional: A4 and A3 differ only by the sheet they are given. */
+@media print{
+  html{height:100%;}
+
+  body.done{
+    height:100%;overflow:hidden;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  /* Nothing may still be easing when the page is captured, or the poster
+     prints a half faded answer. */
+  body.done,body.done *{
+    transition:none;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+
+  body.done .poster{
+    height:100%;width:100%;max-width:none;margin:0;
+    padding:var(--p-pad-t) var(--p-pad-x) var(--p-pad-b);
+    background-color:inherit;
+    font-size:var(--p-base,13px);
+  }
+
+  body.done .lines{flex:0 0 var(--p-poem);}
+  /* Beats the inline size the screen fit leaves on the element. */
+  body.done .inner{font-size:var(--p-fit,72px)!important;}
+  body.done .line{opacity:1;transform:none;}
+
+  /* Everything the player used to get here: buttons, status, hint, input,
+     autocomplete and the reveal block. A poster keeps none of it. */
+  body.done .space>*{display:none;}
+
+  body.done .rule{height:.14em;margin:1.6em 0 .8em;}
+  body.done .foot{font-size:1em;}
+  body.done .foot .prog{display:none;}
+  body.done .foot .ans{opacity:1;height:auto;overflow:visible;}
+  body.done .credit{font-size:.82em;margin-top:.8em;}
+}
+
+html,body{overflow:auto;}
+.read{max-width:900px;margin:0 auto;padding:0 max(18px,4.5vw) max(28px,5vh);}
+.read h1{font:600 clamp(19px,4.4vw,26px) 'Archivo',sans-serif;letter-spacing:.02em;margin-bottom:.2em;}
+.read .when{font-size:clamp(10px,2.4vw,12px);letter-spacing:.09em;text-transform:uppercase;opacity:.7;margin-bottom:1.6em;}
+.read article{margin-bottom:1.9em;}
+.read h2{font:600 clamp(14px,3.2vw,17px) 'Archivo',sans-serif;letter-spacing:.01em;margin-bottom:.5em;}
+.read p{font-size:clamp(12px,2.9vw,15px);line-height:1.65;opacity:.92;}
+.read .go{display:inline-block;margin-top:.6em;font-size:clamp(10px,2.4vw,12px);
+  letter-spacing:.09em;text-transform:uppercase;color:inherit;}
+.read nav{margin-top:2.4em;font-size:clamp(10px,2.4vw,12px);letter-spacing:.09em;text-transform:uppercase;}
+.read nav a{color:inherit;margin-right:1.4em;}
+.crumbs{max-width:900px;margin:0 auto;padding:max(16px,3vh) max(18px,4.5vw) 0;
+  font-size:clamp(10px,2.4vw,12px);letter-spacing:.09em;text-transform:uppercase;opacity:.7;}
+.crumbs a{color:inherit;}
+
+.days{list-style:none;}
+.days li{padding:1.05em 0;border-bottom:1px solid rgba(255,255,255,.22);}
+.days a{color:inherit;display:flex;gap:.9em;align-items:baseline;text-decoration:none;}
+.days b{font:600 clamp(13px,3vw,16px) 'Archivo',sans-serif;letter-spacing:.02em;}
+.days span{font-size:clamp(10px,2.4vw,12px);letter-spacing:.09em;text-transform:uppercase;opacity:.7;}
+.days em{display:block;font-style:normal;font-size:clamp(11px,2.7vw,13px);opacity:.72;margin-top:.35em;}
+.none{font-size:clamp(12px,2.9vw,15px);line-height:1.65;opacity:.92;max-width:34em;}
+</style>
+<style id="pagesize">@page{size:A4;margin:0}</style>
+</head>
+<body style="background:#E6140F">
+<div class="crumbs"><a href="/">Reel Haiku</a></div>
+<div class="read">
+<h1>The archive</h1>
+<p class="when">Empty for now</p>
+<p class="none">Nothing here yet. A day joins the archive a week after it is played,
+        so the first one arrives on 17 August 2026.</p>
+<nav><a href="/">Today's puzzles</a></nav>
+</div>
+</body>
+</html>
