@@ -180,11 +180,10 @@ input::placeholder{color:rgba(255,255,255,.62);}
   font-weight:500;line-height:1.6;letter-spacing:.01em;
   flex:0 0 auto;
 }
-.foot .mark span{display:block;white-space:nowrap;}
-.foot .mark i{
-  display:inline-block;width:.6em;height:1px;background:currentColor;
-  vertical-align:.28em;margin-right:.32em;
-}
+/* The mark, at exactly the height the two stacked words had, so the foot keeps
+   its height on screen and on paper. It is white artwork on transparency, so
+   it sits on whatever colour the puzzle is wearing. */
+.foot .mark img{display:block;height:3.2em;width:auto;}
 .foot .right{text-align:right;}
 .foot .prog{letter-spacing:.3em;margin-bottom:.2em;}
 /* The signature belongs to the poster, not to the game: on screen the reveal
@@ -307,10 +306,7 @@ body.bare .back{display:block;}
 
   <div class="rule"></div>
   <div class="foot">
-    <div class="mark">
-      <span><i></i>Reel</span>
-      <span><i></i>Haiku</span>
-    </div>
+    <div class="mark"><img src="logo-white.png" alt="Reel Haiku"></div>
     <div class="right">
       <div class="prog" id="prog">&#9633;&#9633;&#9633;</div>
       <div class="ans" id="ans"></div>
