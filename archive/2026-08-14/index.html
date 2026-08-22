@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reel Haiku day 6, 14 August 2026</title>
+<meta name="description" content="The three Reel Haiku puzzles from 14 August 2026: The Princess and the Frog, Brokeback Mountain, Back to the Future.">
+<link rel="canonical" href="https://reelhaiku.com/archive/2026-08-14">
+<meta name="theme-color" content="#E6140F">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Reel Haiku">
+<meta property="og:title" content="Reel Haiku day 6, 14 August 2026">
+<meta property="og:description" content="The three Reel Haiku puzzles from 14 August 2026: The Princess and the Frog, Brokeback Mountain, Back to the Future.">
+<meta property="og:url" content="https://reelhaiku.com/archive/2026-08-14">
+<meta property="og:image" content="https://reelhaiku.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Reel Haiku day 6, 14 August 2026">
+<meta name="twitter:description" content="The three Reel Haiku puzzles from 14 August 2026: The Princess and the Frog, Brokeback Mountain, Back to the Future.">
+<meta name="twitter:image" content="https://reelhaiku.com/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+
+body{
+  font-family:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:#E6140F;
+  color:#fff;
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+  transition:background-color .65s ease;
+}
+
+.poster{
+  height:100vh;height:100dvh;
+  display:flex;flex-direction:column;
+  padding:max(18px,3vh) max(18px,4.5vw) max(14px,2.2vh);
+  max-width:900px;margin:0 auto;
+}
+
+/* The haiku owns the top half. Everything else is deliberately small. */
+.lines{flex:0 0 49%;min-height:0;overflow:hidden;}
+.inner{display:block;}
+
+.line{
+  font-family:'Anton',Impact,'Arial Narrow',sans-serif;
+  text-transform:uppercase;
+  line-height:.90;
+  margin-bottom:.06em;
+  display:block;
+  opacity:0;
+  transform:translateY(6px);
+  transition:opacity .5s ease,transform .5s cubic-bezier(.2,.7,.3,1);
+}
+.line:last-child{margin-bottom:0;}
+.line.on{opacity:1;transform:none;}
+
+.line .em{
+  display:inline-block;
+  width:.56em;height:.075em;
+  background:currentColor;
+  vertical-align:.32em;
+  margin-right:.13em;
+}
+
+/* The empty space is the design. Play happens quietly at the bottom of it. */
+.space{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:space-between;}
+.nextrow{
+  display:flex;flex-direction:column;align-items:flex-end;gap:8px;
+  padding-top:max(9px,1.3vh);width:max-content;margin-left:auto;
+}
+.controls{width:100%;}
+
+/* The one control that carries weight, sitting under the poem on the right. */
+.ghost{
+  background:rgba(255,255,255,.17);
+  border:1px solid rgba(255,255,255,.42);
+  color:#fff;opacity:1;
+  font:600 clamp(10.5px,2.9vw,13px) 'Archivo',sans-serif;
+  letter-spacing:.1em;text-transform:uppercase;
+  padding:13px 22px;cursor:pointer;
+  transition:background-color .2s ease,border-color .2s ease;
+}
+.ghost:hover{background:rgba(255,255,255,.3);border-color:rgba(255,255,255,.78);}
+.ghost.gone{visibility:hidden;}
+.ghost{min-width:150px;text-align:center;}
+.ghost.sub{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.3);font-weight:500;}
+.ghost.sub:hover{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.6);}
+.ghost.sub.hero{background:#fff;color:var(--ink,#E6140F);border-color:#fff;font-weight:600;}
+
+/* Two rows of controls and never more, so the poem keeps every pixel of the
+   height it had. The row of finishing actions takes the place the give up
+   button vacates.
+
+   The block is only as wide as its widest row, and the one action left on the
+   second row fills that width. Three puzzles and then the wait is the whole
+   proposition, so the last thing on screen should look deliberate rather than
+   like somewhere a fourth control used to be. */
+.row{display:flex;gap:8px;min-width:0;}
+.nextrow.over #herorow{align-self:stretch;}
+.nextrow.over #herorow #next{flex:1;}
+#endrow{display:none;}
+.nextrow.over #endrow{display:flex;}
+.nextrow.over #skip{display:none;}
+.ghost.sm{
+  min-width:0;padding:13px 15px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+
+.status{
+  font-size:clamp(8.5px,2.2vw,10.5px);
+  font-weight:500;letter-spacing:.09em;text-transform:uppercase;
+  opacity:.7;margin-bottom:7px;height:1.4em;overflow:hidden;
+}
+.status b{font-weight:600;}
+
+.hint{
+  font-size:clamp(9.5px,2.5vw,11.5px);
+  font-weight:500;letter-spacing:.055em;
+  opacity:.9;margin-bottom:9px;height:1.4em;overflow:hidden;
+}
+.hint.gone{visibility:hidden;}
+
+.slot{position:relative;height:clamp(76px,11.5vh,100px);}
+
+input{
+  position:absolute;bottom:0;left:0;right:0;height:52px;
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.45);
+  color:#fff;
+  font:400 16px 'Archivo',sans-serif;
+  padding:0 15px;outline:none;border-radius:0;
+  transition:background-color .2s ease,border-color .2s ease;
+}
+input:focus{background:rgba(255,255,255,.24);border-color:#fff;}
+input::placeholder{color:rgba(255,255,255,.62);}
+
+/* The reveal is the payoff, so it gets real size. */
+.result{
+  position:absolute;inset:0;display:none;
+  flex-direction:column;justify-content:flex-end;
+}
+.result.on{display:flex;}
+.rtitle{
+  font-family:'Anton',Impact,'Arial Narrow',sans-serif;
+  text-transform:uppercase;line-height:.95;
+  font-size:clamp(23px,7vw,44px);
+  margin-bottom:.22em;
+}
+.rmeta{display:flex;align-items:center;gap:11px;
+  font-size:clamp(9.5px,2.5vw,12px);font-weight:500;
+  letter-spacing:.09em;text-transform:uppercase;opacity:.78;}
+.marks{font:400 clamp(12px,3.2vw,15px) ui-monospace,'SF Mono',Menlo,monospace;letter-spacing:.24em;opacity:1;}
+
+.ac{
+  position:absolute;bottom:calc(100% + 5px);left:0;right:0;
+  background:#fff;color:var(--ink,#E6140F);
+  max-height:min(230px,32vh);overflow-y:auto;
+  display:none;z-index:30;box-shadow:0 -6px 22px rgba(0,0,0,.22);
+}
+.ac.on{display:block;}
+.ac div{
+  display:flex;align-items:baseline;gap:10px;
+  padding:12px 14px;cursor:pointer;
+  border-bottom:1px solid rgba(0,0,0,.09);
+}
+.ac div:last-child{border-bottom:0;}
+.ac div:hover,.ac div.sel{background:var(--ink,#E6140F);color:#fff;}
+.ac .t{
+  flex:1;font-size:15px;font-weight:600;letter-spacing:-.005em;
+  line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.ac .y{
+  font:400 12px ui-monospace,'SF Mono',Menlo,monospace;
+  opacity:.5;flex:0 0 auto;letter-spacing:.02em;
+}
+.ac div:hover .y,.ac div.sel .y{opacity:.75;}
+
+/* The sheet chooser, drawn as the autocomplete is drawn, opening down into
+   the empty middle rather than up across the poem. */
+.menu{position:relative;display:flex;min-width:0;}
+.pop{
+  top:calc(100% + 5px);bottom:auto;left:auto;right:0;
+  width:232px;max-width:80vw;max-height:none;
+  box-shadow:0 6px 22px rgba(0,0,0,.22);
+}
+.pop div{padding:9px 14px;}
+.pop .t{font-size:13.5px;}
+
+.rule{height:1.5px;background:currentColor;margin:max(12px,2vh) 0 7px;flex:0 0 auto;}
+
+.foot{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  font-size:clamp(8px,2.05vw,10px);
+  font-weight:500;line-height:1.6;letter-spacing:.01em;
+  flex:0 0 auto;
+}
+/* The mark, at exactly the height the two stacked words had, so the foot keeps
+   its height on screen and on paper. It is white artwork on transparency, so
+   it sits on whatever colour the puzzle is wearing. */
+.foot .mark img{display:block;height:3.2em;width:auto;}
+.foot .right{text-align:right;}
+.foot .prog{letter-spacing:.3em;margin-bottom:.2em;}
+/* The signature belongs to the poster, not to the game: on screen the reveal
+   already names the film in full, so the foot stays blank and only clean view
+   and print turn it on. The height is still reserved because the foot is the
+   taller of its two columns, and collapsing it would move the rule, the mark
+   and the input by 14px. */
+.foot .ans{opacity:0;height:3.2em;overflow:hidden;}
+.credit{
+  flex:0 0 auto;margin-top:6px;
+  font-size:clamp(7.5px,1.95vw,9.5px);font-weight:400;
+  letter-spacing:.06em;opacity:.5;
+}
+.back{display:none;white-space:nowrap;font-weight:500;letter-spacing:.1em;text-transform:uppercase;}
+
+/* Clean view: the interface goes and the room it was using stays empty. The
+   poem keeps its 49%, which is the share the sheet gives it too, so this is
+   the printed poster on a screen rather than a bigger version of the poem.
+   The same rules as the print block, over the same elements, and only the box
+   they are given to fill is different. */
+body.bare .space>*{display:none;}
+body.bare .foot .prog{display:none;}
+body.bare .foot .ans{opacity:1;height:auto;overflow:visible;}
+body.bare .credit{display:flex;justify-content:space-between;gap:12px;}
+body.bare .back{display:block;}
+
+/* Print geometry, held as fractions of the sheet. The type fit reads these
+   too, so the measurement and the print rules cannot drift apart. */
+:root{--p-pad-t:6.4%;--p-pad-x:7%;--p-pad-b:5.4%;--p-poem:49%;}
+
+/* Paper. The same poster, measured against the page box rather than the
+   viewport, which has no meaning here. Everything is scoped to body.done, so
+   these rules are unreachable until the puzzle is over and the poem is whole.
+   Sizes are proportional: A4 and A3 differ only by the sheet they are given. */
+@media print{
+  html{height:100%;}
+
+  body.done{
+    height:100%;overflow:hidden;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  /* Nothing may still be easing when the page is captured, or the poster
+     prints a half faded answer. */
+  body.done,body.done *{
+    transition:none;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+
+  body.done .poster{
+    height:100%;width:100%;max-width:none;margin:0;
+    padding:var(--p-pad-t) var(--p-pad-x) var(--p-pad-b);
+    background-color:inherit;
+    font-size:var(--p-base,13px);
+  }
+
+  body.done .lines{flex:0 0 var(--p-poem);}
+  /* Beats the inline size the screen fit leaves on the element. */
+  body.done .inner{font-size:var(--p-fit,72px)!important;}
+  body.done .line{opacity:1;transform:none;}
+
+  /* Everything the player used to get here: buttons, status, hint, input,
+     autocomplete and the reveal block. A poster keeps none of it. */
+  body.done .space>*{display:none;}
+
+  body.done .rule{height:.14em;margin:1.6em 0 .8em;}
+  body.done .foot{font-size:1em;}
+  body.done .foot .prog{display:none;}
+  body.done .foot .ans{opacity:1;height:auto;overflow:visible;}
+  body.done .credit{font-size:.82em;margin-top:.8em;}
+}
+
+html,body{overflow:auto;}
+.read{max-width:900px;margin:0 auto;padding:0 max(18px,4.5vw) max(28px,5vh);}
+.read h1{font:600 clamp(19px,4.4vw,26px) 'Archivo',sans-serif;letter-spacing:.02em;margin-bottom:.2em;}
+.read .when{font-size:clamp(10px,2.4vw,12px);letter-spacing:.09em;text-transform:uppercase;opacity:.7;margin-bottom:1.6em;}
+.read article{margin-bottom:1.9em;}
+.read h2{font:600 clamp(14px,3.2vw,17px) 'Archivo',sans-serif;letter-spacing:.01em;margin-bottom:.5em;}
+.read p{font-size:clamp(12px,2.9vw,15px);line-height:1.65;opacity:.92;}
+.read .go{display:inline-block;margin-top:.6em;font-size:clamp(10px,2.4vw,12px);
+  letter-spacing:.09em;text-transform:uppercase;color:inherit;}
+.read nav{margin-top:2.4em;font-size:clamp(10px,2.4vw,12px);letter-spacing:.09em;text-transform:uppercase;}
+.read nav a{color:inherit;margin-right:1.4em;}
+.crumbs{max-width:900px;margin:0 auto;padding:max(16px,3vh) max(18px,4.5vw) 0;
+  font-size:clamp(10px,2.4vw,12px);letter-spacing:.09em;text-transform:uppercase;opacity:.7;}
+.crumbs a{color:inherit;}
+</style>
+<style id="pagesize">@page{size:A4;margin:0}</style>
+</head>
+<body>
+<div class="poster">
+
+  <div class="lines" id="lines">
+    <div class="inner" id="inner">
+      <span class="line" id="l0"></span>
+      <span class="line" id="l1"></span>
+      <span class="line" id="l2"></span>
+    </div>
+  </div>
+
+  <div class="space">
+    <div class="nextrow" id="nextrow">
+      <div class="row" id="endrow">
+        <button class="ghost sub sm" id="clean">Clean view</button>
+        <div class="menu">
+          <button class="ghost sub sm" id="poster">Save as poster</button>
+          <div class="ac pop" id="sizes"></div>
+        </div>
+      </div>
+      <button class="ghost" id="skip">Next clue</button>
+      <div class="row" id="herorow">
+        <button class="ghost sub" id="next">New puzzle</button>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="status" id="status">Clue one of three</div>
+      <div class="hint" id="hint">Type a film title, then choose it from the list</div>
+      <div class="slot">
+        <div class="ac" id="ac"></div>
+        <input id="guess" type="text" placeholder="Start typing&hellip;" autocomplete="off" autocorrect="off" spellcheck="false">
+        <div class="result" id="result">
+          <div class="rtitle" id="rtitle"></div>
+          <div class="rmeta">
+            <span class="marks" id="marks"></span>
+            <span id="rtxt"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+  <div class="foot">
+    <div class="mark"><img src="logo-white.png" alt="Reel Haiku"></div>
+    <div class="right">
+      <div class="prog" id="prog">&#9633;&#9633;&#9633;</div>
+      <div class="ans" id="ans"></div>
+    </div>
+  </div>
+
+  <div class="credit">Created by Mike Linsey and Nathan Haslewood<span class="back">Tap anywhere to go back</span></div>
+</div>
+<div class="read">
+<h1>Day 6</h1>
+<p class="when">14 August 2026</p>
+<article>
+<h2>The Princess and the Frog (2009)</h2>
+<p>Shadows do his work<br>Gumbo simmers on the stove<br>A bug lights the swamp</p>
+<a class="go" href="#" data-play="0">Play this one</a>
+</article>
+<article>
+<h2>Brokeback Mountain (2005)</h2>
+<p>Two hands want the work<br>A summer of sheep and cold<br>One tent, one sleeps out</p>
+<a class="go" href="#" data-play="1">Play this one</a>
+</article>
+<article>
+<h2>Back to the Future (1985)</h2>
+<p>A photo goes pale<br>Your parents were teenagers<br>Lightning hits the clock</p>
+<a class="go" href="#" data-play="2">Play this one</a>
+</article>
+<nav><a href="/archive">All days</a><a href="/">Today's puzzles</a></nav>
+</div>
+<script>self.ARCHIVE = {"date":"2026-08-14","number":6,"puzzles":[{"l":["Shadows do his work","Gumbo simmers on the stove","A bug lights the swamp"],"t":"The Princess and the Frog","y":2009,"k":"#00646E"},{"l":["Two hands want the work","A summer of sheep and cold","One tent, one sleeps out"],"t":"Brokeback Mountain","y":2005,"k":"#C4006A"},{"l":["A photo goes pale","Your parents were teenagers","Lightning hits the clock"],"t":"Back to the Future","y":1985,"k":"#00646E"}]};</script>
+<script>
+
+/* Content is fetched at boot, not inlined. */
+let PUZZLES = [];
+let FILMS = [];
+let order = [], oi = 0;
+let shown = 1, guesses = 0, over = false, sel = -1, matches = [];
+
+const $ = id => document.getElementById(id);
+const lineEls=[$('l0'),$('l1'),$('l2')];
+const linesBox=$('lines'), inner=$('inner'), progEl=$('prog'), ansEl=$('ans'),
+      statusEl=$('status'), input=$('guess'), acEl=$('ac'),
+      resultEl=$('result'), marksEl=$('marks'), rtxtEl=$('rtxt'), rtitleEl=$('rtitle'),
+      skipBtn=$('skip'), nextBtn=$('next'), hintEl=$('hint'),
+      nextrowEl=$('nextrow'), posterBtn=$('poster'), pageEl=$('pagesize'),
+      cleanBtn=$('clean'), sizeEl=$('sizes');
+
+const P = () => PUZZLES[order[oi]];
+const WORD = ['one','two','three'];
+
+/* Nothing before 1940 is ever served. Held as a rule in code rather than an
+   edit to the data, so it still holds when new puzzles land. */
+const FROM = 1940;
+
+/* The daily game. Three puzzles a day, the same three for everybody, worked
+   out on the device with nothing to ask a server.
+
+   EPOCH and SEED must never move. Every day number, and every share card
+   anybody has already posted, is counted from them: change either and every
+   player's history renumbers under them. */
+/* archive:schedule:start */
+const EPOCH = Date.UTC(2026, 7, 9);        /* 9 August 2026, UTC midnight */
+const SEED = 20260809;
+const DAY = 86400000;
+const GAP = 2;                             /* days before a film may come round again */
+const HOME = 'https://reelhaiku.com';
+const STORE = 'reelhaiku';
+
+/* Rollover is UTC midnight everywhere, which is 10am in Melbourne. Date.now
+   is UTC, so the day never reads the device clock's timezone. */
+const dayNumber = () => Math.max(0, Math.floor((Date.now() - EPOCH) / DAY));
+
+/* mulberry32. Integer ops throughout, so every browser walks the same
+   sequence from the same seed. */
+const rng = s => () => {
+  s = s + 0x6D2B79F5 | 0;
+  let t = Math.imul(s ^ s >>> 15, 1 | s);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+  return ((t ^ t >>> 14) >>> 0) / 4294967296;
+};
+
+let SCHED = [], DAYS = 0, today = 0, res = [null,null,null], streak = 0;
+
+/* One shuffle of the whole corpus, then day N takes 3N, 3N+1 and 3N+2. */
+function schedule(){
+  const r = rng(SEED);
+  const a = PUZZLES.map((z, i) => i);
+  for(let i = a.length - 1; i > 0; i--){ const j = (r() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; }
+  /* The same film must not come round again inside GAP days. Twice in one day
+     hands over the answer in the same sitting, and two days running is nearly
+     as bad: the second puzzle is dead on arrival. A plain shuffle does both,
+     because the corpus is two hundred films of three haiku each, so clashes
+     are swapped forward in a fixed order, which leaves the schedule a pure
+     function of the seed.
+
+     Two is deliberately short of what this seed can reach. Reaching further is
+     luck of the arrangement, and a repair that overreaches and then fails to
+     find a swap leaves a clash worse than the one it was chasing. */
+  const name = i => PUZZLES[i].t;
+  const near = (at, val, x, y) => {
+    const d = (at / 3) | 0;
+    const lo = Math.max(0, (d - GAP + 1) * 3), hi = Math.min(a.length, (d + GAP) * 3);
+    for(let k = lo; k < hi; k++) if(k !== x && k !== y && name(a[k]) === val) return true;
+    return false;
+  };
+  for(let i = 0; i < a.length; i++){
+    if(!near(i, name(a[i]), i, -1)) continue;
+    for(let j = i + 1; j < a.length; j++){
+      if(!near(i, name(a[j]), i, j) && !near(j, name(a[i]), i, j)){
+        [a[i], a[j]] = [a[j], a[i]];
+        break;
+      }
+    }
+  }
+  return a;
+}
+/* archive:schedule:end */
+
+/* Progress lives on the device and nowhere else. Every touch is wrapped, so a
+   browser with storage switched off plays perfectly and simply forgets. */
+const stored = () => { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch(e){ return {}; } };
+const store = s => { try { localStorage.setItem(STORE, JSON.stringify(s)); } catch(e){} };
+
+const dayDone = () => res.every(v => v !== null);
+const rolled = () => dayNumber() !== today;
+
+function loadDay(){
+  today = dayNumber();
+  const s = stored();
+  res = (s.day === today && Array.isArray(s.res) && s.res.length === 3) ? s.res.slice() : [null,null,null];
+  /* A streak survives yesterday and nothing older. */
+  streak = (s.last === today || s.last === today - 1) ? (s.streak || 0) : 0;
+}
+
+/* The streak counts days played, not days won. A player can be handed three
+   films they have never seen, which is the corpus's doing and not theirs. */
+function record(slot, mark){
+  res[slot] = mark;
+  const s = stored();
+  let run = s.streak || 0, last = s.last;
+  if(dayDone() && last !== today){
+    run = last === today - 1 ? run + 1 : 1;
+    last = today;
+  }
+  streak = (last === today || last === today - 1) ? run : 0;
+  store({ day: today, res, streak: run, last });
+}
+
+/* Largest size at which all three lines, fully wrapped, still fit the box.
+   Fitting against all three rather than the visible ones is what stops the
+   layout moving as lines appear. */
+function fit(){
+  const h = linesBox.clientHeight, w = linesBox.clientWidth;
+  if(!h || !w) return;
+  let lo = 14, hi = 360;
+  for(let i=0;i<20;i++){
+    const mid = (lo + hi) / 2;
+    inner.style.fontSize = mid + 'px';
+    if(inner.scrollHeight <= h && inner.scrollWidth <= w + 1) lo = mid; else hi = mid;
+  }
+  inner.style.fontSize = lo + 'px';
+}
+
+function paint(){
+  const z = P();
+  if(!z) return;
+  document.body.style.background = z.k;
+  document.documentElement.style.setProperty('--ink', z.k);
+  lineEls.forEach((el,i) => {
+    el.innerHTML = '<span class="em"></span>' + z.l[i];
+    el.classList.toggle('on', i < shown);
+  });
+  progEl.textContent = [0,1,2].map(i => i < shown ? '\u25A0' : '\u25A1').join('');
+  skipBtn.textContent = shown === 3 ? 'Give up' : 'Next clue';
+  fit();
+}
+
+const say = m => statusEl.innerHTML = m;
+const clue = () => `Clue <b>${WORD[shown-1]}</b> of three`;
+
+function finish(won){
+  over = true;
+  const z = P();
+  shown = 3; paint();
+  /* Written for the poster surfaces to pick up. On screen it stays hidden. */
+  ansEl.innerHTML = z.t + '<br>' + z.y;
+  input.style.display = 'none';
+  resultEl.classList.add('on');
+  acEl.classList.remove('on');
+  skipBtn.classList.add('gone');
+  nextBtn.classList.add('hero');
+  nextrowEl.classList.add('over');
+  document.body.classList.add('done');
+
+  const marks = ['\u25A1','\u25A1','\u25A1'];
+  if(won) marks[Math.min(guesses,3)-1] = '\u25A0';
+  rtitleEl.textContent = z.t;
+  marksEl.textContent = won ? marks.join('') : '\u2715\u2715\u2715';
+  rtxtEl.textContent = z.y + (won ? '  /  Solved on clue ' + WORD[guesses-1] : '  /  Beat me today');
+  say(won ? 'Solved' : 'Missed');
+  record(oi, won ? Math.min(guesses,3) : 'x');
+  controls(); dayline();
+}
+
+function advance(label){
+  if(shown === 3){ finish(false); return; }
+  shown++; paint();
+  say(label + clue());
+  input.value=''; acEl.classList.remove('on'); sel=-1;
+}
+
+function submit(f){
+  if(over || !f) return;
+  const z = P();
+  if(f[0] === z.t && f[1] === z.y){ guesses++; finish(true); return; }
+  /* A few titles are in the list twice because both versions are notable
+     enough to keep and one of them is somebody's answer. Naming the right
+     film and the wrong version is a coin flip on a year, not a wrong answer,
+     so it costs no guess and the clue count stays where it is. */
+  if(f[0] === z.t){
+    say('Right film, wrong version. ' + clue());
+    input.value=''; acEl.classList.remove('on'); sel=-1;
+    return;
+  }
+  guesses++;
+  advance(`Not ${f[0]}. `);
+}
+
+function skip(){ if(over) return; guesses++; advance(''); }
+
+/* Clears the board for whatever oi now points at. */
+function start(){
+  shown=1; guesses=0; over=false; sel=-1;
+  input.style.display=''; input.value='';
+  resultEl.classList.remove('on');
+  skipBtn.classList.remove('gone');
+  nextBtn.classList.remove('hero');
+  nextrowEl.classList.remove('over');
+  document.body.classList.remove('done');
+  ansEl.innerHTML='';
+  acEl.classList.remove('on');
+  paint();
+  say('Clue one of three');
+  controls(); dayline();
+}
+
+/* The only way to another puzzle, and it can only ever reach today's three. */
+const nextDaily = () => { const i = res.indexOf(null); if(i >= 0){ oi = i; start(); } };
+
+/* Coming back to a day that is already finished shows the last of the three
+   as it ended, so the poem, clean view and the poster all still work. */
+function showDone(){
+  oi = 2;
+  const v = res[2];
+  shown = 3; guesses = v === 'x' ? 3 : v; over = false;
+  finish(v !== 'x');
+}
+
+const HINT = 'Type a film title, then choose it from the list';
+const LEFT = ['', 'Two more today', 'One more today'];
+
+function countdown(){
+  const ms = EPOCH + (today + 1) * DAY - Date.now();
+  if(ms <= 0) return null;
+  const h = Math.floor(ms / 3600000), m = Math.floor(ms % 3600000 / 60000);
+  return h ? h + 'h ' + m + 'm' : m ? m + 'm' : Math.floor(ms / 1000) + 's';
+}
+
+/* Whatever the day has to say, in the hint slot. The result state already
+   leaves that line empty, so it costs no height, and being inside the play
+   column it is hidden in clean view and in print along with everything else
+   there. It says nothing at all until a puzzle is over. */
+function dayline(){
+  hintEl.classList.remove('gone');
+  if(!over){ hintEl.textContent = HINT; return; }
+  if(!dayDone()){ hintEl.textContent = LEFT[res.filter(v => v !== null).length]; return; }
+  const t = rolled() ? null : countdown();
+  hintEl.textContent = t ? (streak > 1 ? 'Streak ' + streak + ' days. ' : '') + 'Next puzzles in ' + t
+                         : 'New puzzles are ready';
+}
+
+function controls(){
+  const done = dayDone();
+  document.body.classList.toggle('daydone', done);
+  nextBtn.textContent = !done ? 'Next puzzle' : rolled() ? 'Play today' : 'Share';
+  /* Nothing to move on to mid puzzle: three a day and then the wait. */
+  nextBtn.classList.toggle('gone', !over);
+}
+
+/* Spoiler free by construction: three groups of glyphs saying which clue each
+   puzzle fell on, the day number and the address. No titles, no years, no
+   clue text ever goes near it. */
+function card(){
+  const box = '\u25A1', full = '\u25A0', cross = '\u2715';
+  const rows = res.map(v => v === null ? box + box + box
+    : v === 'x' ? cross + cross + cross
+    : [0,1,2].map(i => i === v - 1 ? full : box).join('')).join(' ');
+  return 'Reel Haiku #' + (today + 1) + '\n' + rows + '\n' + HOME;
+}
+
+let copyT;
+async function share(){
+  const text = card();
+  if(navigator.share){
+    try { await navigator.share({ text }); return; } catch(e){ return; }
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:0;';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch(e2){}
+    ta.remove();
+  }
+  nextBtn.textContent = 'Copied';
+  clearTimeout(copyT);
+  copyT = setTimeout(controls, 1800);
+}
+
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+input.addEventListener('input', () => {
+  const q = input.value.trim().toLowerCase();
+  sel = -1;
+  if(q.length < 2){ acEl.classList.remove('on'); return; }
+  /* Rank titles that start with the query above ones that merely contain it. */
+  const starts = [], has = [];
+  for(const f of FILMS){
+    const l = f[0].toLowerCase();
+    if(l.startsWith(q)) starts.push(f);
+    else if(l.includes(q)) has.push(f);
+    if(starts.length >= 8) break;
+  }
+  matches = starts.concat(has).slice(0,8);
+  if(!matches.length){ acEl.classList.remove('on'); return; }
+  acEl.innerHTML = matches.map((f,i) =>
+    `<div data-i="${i}"><span class="t">${esc(f[0])}</span>` +
+    `<span class="y">${f[1] || ''}</span></div>`).join('');
+  acEl.classList.add('on');
+});
+
+acEl.addEventListener('click', e => {
+  const d = e.target.closest('div[data-i]');
+  if(d) submit(matches[+d.dataset.i]);
+});
+
+input.addEventListener('keydown', e => {
+  if(!acEl.classList.contains('on')) return;
+  const items = [...acEl.querySelectorAll('div')];
+  if(e.key === 'ArrowDown'){ e.preventDefault(); sel = Math.min(sel+1, items.length-1); }
+  else if(e.key === 'ArrowUp'){ e.preventDefault(); sel = Math.max(sel-1, 0); }
+  else if(e.key === 'Enter'){ e.preventDefault(); submit(matches[sel < 0 ? 0 : sel]); return; }
+  else if(e.key === 'Escape'){ acEl.classList.remove('on'); return; }
+  else return;
+  items.forEach((el,i) => el.classList.toggle('sel', i === sel));
+});
+
+skipBtn.addEventListener('click', skip);
+nextBtn.addEventListener('click', () => {
+  if(!dayDone()){ nextDaily(); return; }
+  if(rolled()){ loadDay(); begin(); return; }
+  share();
+});
+
+/* A click anywhere shuts the sheet chooser. */
+const shut = () => sizeEl.classList.remove('on');
+
+posterBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  if(sizeEl.classList.contains('on')){ shut(); return; }
+  /* As much of the list as there is room for between the button and the foot
+     of the screen, so a short phone scrolls rather than losing a size. */
+  sizeEl.style.maxHeight = (innerHeight - posterBtn.getBoundingClientRect().bottom - 24) + 'px';
+  sizeEl.classList.add('on');
+});
+
+/* Clean view. Nothing is added to the page and nothing is moved: one class on
+   the body takes the interface away and leaves its room empty. The poem box is
+   the same 49% either way, so the fit lands on the size it already had. The
+   call stays so that remains true if the composition ever changes. */
+let bare = false;
+function clean(on){
+  bare = on;
+  document.body.classList.toggle('bare', on);
+  fit();
+}
+
+cleanBtn.addEventListener('click', e => { e.stopPropagation(); shut(); clean(true); });
+addEventListener('click', () => { shut(); if(bare) clean(false); });
+addEventListener('keydown', e => { if(e.key === 'Escape' && bare) clean(false); });
+
+/* The poster. Print only, no library and no server: the browser turns the
+   finished puzzle into a PDF using the rules in the print block above. */
+const MM = 96 / 25.4;                 /* CSS pixels per millimetre at 96dpi */
+const SHEET = { A4:[210,297], A3:[297,420] };
+let sheet = 'A4';
+
+sizeEl.innerHTML = Object.keys(SHEET).map(k =>
+  `<div data-s="${k}"><span class="t">${k}</span>` +
+  `<span class="y">${SHEET[k][0]} x ${SHEET[k][1]} mm</span></div>`).join('');
+
+/* The screen fit measures the poem against the on-screen box, which says
+   nothing about a sheet of paper. Measure it again in an off-screen box the
+   exact size of the poem area on the chosen sheet, so a long haiku sets
+   smaller on paper for the same reason it does on screen. The real element is
+   never touched, so the screen cannot move. */
+function printFit(){
+  const cs = getComputedStyle(document.documentElement);
+  const pc = n => parseFloat(cs.getPropertyValue(n)) / 100;
+  const pw = SHEET[sheet][0] * MM, ph = SHEET[sheet][1] * MM;
+  const w = pw * (1 - 2 * pc('--p-pad-x'));
+  const h = (ph - pw * (pc('--p-pad-t') + pc('--p-pad-b'))) * pc('--p-poem');
+
+  /* The probe carries the lines but not the inner class, or the print rule
+     that sizes the poem would size the probe measuring it as well. */
+  const box = document.createElement('div');
+  box.style.cssText = 'position:fixed;left:-9999px;top:0;visibility:hidden;' +
+    'overflow:hidden;width:' + w + 'px;height:' + h + 'px;';
+  box.innerHTML = '<div>' + inner.innerHTML + '</div>';
+  document.body.appendChild(box);
+  const probe = box.firstChild;
+  let lo = 14, hi = 900;
+  for(let i=0;i<22;i++){
+    const mid = (lo + hi) / 2;
+    probe.style.fontSize = mid + 'px';
+    if(probe.scrollHeight <= h && probe.scrollWidth <= w + 1) lo = mid; else hi = mid;
+  }
+  box.remove();
+
+  const r = document.documentElement.style;
+  r.setProperty('--p-fit', lo + 'px');
+  r.setProperty('--p-base', pw * 0.017 + 'px');
+}
+
+/* The sheet and the page rule are set together, so a print raised from the
+   browser can never fit one size and print on the other. */
+function setSheet(s){
+  sheet = s;
+  pageEl.textContent = '@page{size:' + s + ';margin:0}';
+}
+
+/* Picking the sheet is the action: choose a size and the dialogue opens. */
+sizeEl.addEventListener('click', async e => {
+  const d = e.target.closest('div[data-s]');
+  if(!d) return;
+  shut();
+  setSheet(d.dataset.s);
+  /* Without the real face the poem is fitted to fallback metrics, and the PDF
+     comes out in the wrong type at the wrong size. */
+  if(document.fonts && document.fonts.ready) await document.fonts.ready;
+  printFit();
+  print();
+});
+
+/* Also covers a print raised from the browser itself rather than the button. */
+addEventListener('beforeprint', () => { if(over) printFit(); });
+
+let rt;
+addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(fit, 120); });
+
+/* Everything the day needs, in the order it needs it. */
+function begin(){
+  loadDay();
+  if(PUZZLES.length < 3){ say('Could not load puzzles'); return; }
+  SCHED = schedule();
+  DAYS = Math.floor(SCHED.length / 3);
+  /* order is only ever the day's three, so there is no fourth puzzle to
+     reach: not from the interface and not from anything a player can edit. */
+  const at = (today % DAYS) * 3;
+  order = SCHED.slice(at, at + 3);
+  const i = res.indexOf(null);
+  if(i < 0) showDone(); else { oi = i; start(); }
+  tick();
+}
+
+/* One timer, and it only ever writes the day line. The countdown is not
+   allowed anywhere else: it lives in the play column, so clean view and print
+   drop it along with everything else there. */
+let tickT, wasRolled = false;
+function tick(){
+  clearTimeout(tickT);
+  if(over){
+    dayline();
+    if(rolled() !== wasRolled){ wasRolled = rolled(); controls(); }
+  }
+  tickT = setTimeout(tick, 1000);
+}
+
+/* Content is fetched rather than inlined, so the file stays editable and the
+   same shape works for the real site.
+
+   no-cache does not mean no caching. It means the browser must ask the server
+   whether its copy is still good, and Pages answers an unchanged file with a
+   304 and no body. A version in the query string only worked when somebody
+   remembered to bump it, and content has already shipped stale because nobody
+   did. This asks every time and costs nothing when the answer is no change. */
+if(!self.ARCHIVE) Promise.all([
+  fetch('puzzles.json', {cache: 'no-cache'}).then(r => r.json()),
+  fetch('titles.json', {cache: 'no-cache'}).then(r => r.json())
+]).then(([p, t]) => {
+  PUZZLES = p.puzzles.filter(z => z.y >= FROM);
+  FILMS = t;
+  begin();
+}).catch(() => {
+  say('Could not load puzzles');
+});
+
+/* Refit once the real face loads, or the size is measured against a fallback
+   with completely different metrics. */
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+addEventListener('load', fit);
+</script>
+<script>
+const A = self.ARCHIVE, KEY = 'reelhaiku.archive';
+const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){ return {}; } };
+const write = s => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch(e){} };
+
+PUZZLES = A.puzzles;
+order = [0,1,2];
+res = (read()[A.date] || [null,null,null]).slice();
+/* So the hero never decides the day has rolled and tries to reboot it. */
+today = dayNumber();
+
+/* Replaces the daily recorder. Nothing on an archive page writes the daily
+   key or the streak, because the only writer is this one. */
+record = (slot, mark) => { res[slot] = mark; const s = read(); s[A.date] = res; write(s); };
+
+/* The hero's last step is the archive rather than a share card. */
+share = () => { location.href = '/archive'; };
+
+/* No countdown here. It belongs to the day that is running. */
+dayline = () => {
+  hintEl.classList.remove('gone');
+  if(!over){ hintEl.textContent = 'Type a film title, then choose it from the list'; return; }
+  const left = res.filter(v => v === null).length;
+  hintEl.textContent = left ? (left === 2 ? 'Two more on this day' : 'One more on this day')
+                            : 'That is this day played. The answers are below.';
+};
+controls = () => {
+  const done = res.every(v => v !== null);
+  document.body.classList.toggle('daydone', done);
+  nextBtn.textContent = done ? 'All days' : 'Next puzzle';
+  nextBtn.classList.toggle('gone', !over);
+};
+
+document.querySelectorAll('[data-play]').forEach(a => a.addEventListener('click', e => {
+  e.preventDefault();
+  oi = +a.dataset.play;
+  res[oi] = null;
+  start();
+  scrollTo({ top: 0, behavior: 'smooth' });
+}));
+
+fetch('/titles.json', {cache: 'no-cache'}).then(r => r.json()).then(t => {
+  FILMS = t;
+  oi = Math.max(0, res.indexOf(null));
+  start();
+}).catch(() => say('Could not load titles'));
+</script>
+</body>
+</html>
